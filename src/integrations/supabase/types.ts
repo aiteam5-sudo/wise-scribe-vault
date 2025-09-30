@@ -96,6 +96,7 @@ export type Database = {
       notes: {
         Row: {
           action_items: string[] | null
+          audio_files: string[] | null
           audio_url: string | null
           content: string | null
           created_at: string
@@ -108,9 +109,12 @@ export type Database = {
           title: string
           updated_at: string
           user_id: string
+          video_files: string[] | null
+          video_url: string | null
         }
         Insert: {
           action_items?: string[] | null
+          audio_files?: string[] | null
           audio_url?: string | null
           content?: string | null
           created_at?: string
@@ -123,9 +127,12 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id: string
+          video_files?: string[] | null
+          video_url?: string | null
         }
         Update: {
           action_items?: string[] | null
+          audio_files?: string[] | null
           audio_url?: string | null
           content?: string | null
           created_at?: string
@@ -138,6 +145,8 @@ export type Database = {
           title?: string
           updated_at?: string
           user_id?: string
+          video_files?: string[] | null
+          video_url?: string | null
         }
         Relationships: [
           {

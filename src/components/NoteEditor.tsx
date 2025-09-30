@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Mic, MicOff, Sparkles, Loader2, Trash2, Replace, Wand2, MoreVertical, Share2, Copy, Tag, Image, AudioLines, ScanLine, StickyNote, Calendar, Minimize2, Maximize2, FileDown, Mail, MessageCircle } from "lucide-react";
+import { Mic, MicOff, Sparkles, Loader2, Trash2, Replace, Wand2, MoreVertical, Share2, Copy, Image, AudioLines, StickyNote, Calendar, Minimize2, Maximize2, FileDown, Mail, MessageCircle, Video, X, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,11 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
   const [titleSuggestions, setTitleSuggestions] = useState<string[]>([]);
   const [showTitlePopover, setShowTitlePopover] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
+  const [audioFiles, setAudioFiles] = useState<string[]>([]);
+  const [videoFiles, setVideoFiles] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const audioInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
   const realtimeRef = useRef<RealtimeTranscription | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -69,6 +74,8 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
     setContent("");
     setSummary("");
     setActionItems([]);
+    setAudioFiles([]);
+    setVideoFiles([]);
   };
 
   const fetchNote = async () => {
@@ -91,6 +98,8 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
       setContent(data.content);
       setSummary(data.summary || "");
       setActionItems(data.action_items || []);
+      setAudioFiles(data.audio_files || []);
+      setVideoFiles(data.video_files || []);
     }
   };
 
@@ -433,13 +442,6 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
     }
   };
 
-  const handleAddTag = () => {
-    toast({
-      title: "Add tag",
-      description: "Tag functionality coming soon!",
-    });
-  };
-
   const handleAddImage = () => {
     toast({
       title: "Add image",
@@ -448,17 +450,121 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
   };
 
   const handleAddAudio = () => {
-    toast({
-      title: "Add audio",
-      description: "Audio upload coming soon!",
-    });
+    audioInputRef.current?.click();
   };
 
-  const handleScan = () => {
-    toast({
-      title: "Scan",
-      description: "Scan functionality coming soon!",
-    });
+  const handleAddVideo = () => {
+    videoInputRef.current?.click();
+  };
+
+  const handleAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !noteId) return;
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${userId}/${noteId}/${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('note-audio')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('note-audio')
+        .getPublicUrl(fileName);
+
+      const newAudioFiles = [...audioFiles, publicUrl];
+      setAudioFiles(newAudioFiles);
+
+      await supabase
+        .from('notes')
+        .update({ audio_files: newAudioFiles })
+        .eq('id', noteId);
+
+      toast({
+        title: "Audio uploaded",
+        description: "Audio file has been added to your note.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Upload failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      if (audioInputRef.current) audioInputRef.current.value = '';
+    }
+  };
+
+  const handleVideoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !noteId) return;
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${userId}/${noteId}/${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('note-video')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('note-video')
+        .getPublicUrl(fileName);
+
+      const newVideoFiles = [...videoFiles, publicUrl];
+      setVideoFiles(newVideoFiles);
+
+      await supabase
+        .from('notes')
+        .update({ video_files: newVideoFiles })
+        .eq('id', noteId);
+
+      toast({
+        title: "Video uploaded",
+        description: "Video file has been added to your note.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Upload failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      if (videoInputRef.current) videoInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveAudio = async (index: number) => {
+    const newAudioFiles = audioFiles.filter((_, i) => i !== index);
+    setAudioFiles(newAudioFiles);
+
+    if (noteId) {
+      await supabase
+        .from('notes')
+        .update({ audio_files: newAudioFiles })
+        .eq('id', noteId);
+    }
+  };
+
+  const handleRemoveVideo = async (index: number) => {
+    const newVideoFiles = videoFiles.filter((_, i) => i !== index);
+    setVideoFiles(newVideoFiles);
+
+    if (noteId) {
+      await supabase
+        .from('notes')
+        .update({ video_files: newVideoFiles })
+        .eq('id', noteId);
+    }
   };
 
   const handleStickyNote = () => {
@@ -600,21 +706,17 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
                 Duplicate
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleAddTag}>
-                <Tag className="mr-2 h-4 w-4" />
-                Add Tag
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleAddImage}>
                 <Image className="mr-2 h-4 w-4" />
                 Add Image
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleAddAudio}>
+              <DropdownMenuItem onClick={handleAddAudio} disabled={isUploading}>
                 <AudioLines className="mr-2 h-4 w-4" />
-                Add Audio
+                {isUploading ? "Uploading..." : "Add Audio"}
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleScan}>
-                <ScanLine className="mr-2 h-4 w-4" />
-                Scan
+              <DropdownMenuItem onClick={handleAddVideo} disabled={isUploading}>
+                <Video className="mr-2 h-4 w-4" />
+                {isUploading ? "Uploading..." : "Add Video"}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleStickyNote}>
                 <StickyNote className="mr-2 h-4 w-4" />
@@ -638,6 +740,68 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
+        <input
+          ref={audioInputRef}
+          type="file"
+          accept="audio/*"
+          onChange={handleAudioUpload}
+          className="hidden"
+        />
+        <input
+          ref={videoInputRef}
+          type="file"
+          accept="video/*"
+          onChange={handleVideoUpload}
+          className="hidden"
+        />
+
+        {(audioFiles.length > 0 || videoFiles.length > 0) && (
+          <Card className="mb-4 p-4 space-y-3 glass-effect border-border/50">
+            {audioFiles.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                  <AudioLines className="h-4 w-4 text-primary" />
+                  Audio Files
+                </h4>
+                {audioFiles.map((url, index) => (
+                  <div key={index} className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+                    <audio controls src={url} className="flex-1 h-10" />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveAudio(index)}
+                      className="h-8 w-8 hover:text-destructive"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {videoFiles.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                  <Video className="h-4 w-4 text-primary" />
+                  Video Files
+                </h4>
+                {videoFiles.map((url, index) => (
+                  <div key={index} className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+                    <video controls src={url} className="flex-1 max-h-[300px] rounded" />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveVideo(index)}
+                      className="h-8 w-8 hover:text-destructive self-start"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        )}
+
         <RichTextEditor
           value={content}
           onChange={setContent}
