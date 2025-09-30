@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Folder, Search, LogOut, Plus, FolderPlus, MoreVertical, Pencil, Trash2, User as UserIcon, Settings, CheckSquare, FileText, Trash, Home } from "lucide-react";
+import { Folder, Search, LogOut, Plus, FolderPlus, MoreVertical, Pencil, Trash2, User as UserIcon, Settings, CheckSquare, FileText, Trash, Home, Mail, Brain } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -46,12 +46,13 @@ interface Folder {
 interface AppSidebarProps {
   user: User;
   onSignOut: () => void;
-  onViewChange: (view: 'notes' | 'search') => void;
+  onViewChange: (view: 'notes' | 'search' | 'tasks' | 'trash') => void;
   selectedFolderId: string | null;
   onFolderSelect: (folderId: string | null) => void;
+  currentView: 'notes' | 'search' | 'tasks' | 'trash';
 }
 
-export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, onFolderSelect }: AppSidebarProps) {
+export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, onFolderSelect, currentView }: AppSidebarProps) {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [newFolderName, setNewFolderName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
@@ -169,11 +170,26 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
   return (
     <Sidebar className="border-r glass-effect">
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-xl font-bold gradient-primary bg-clip-text text-transparent glow-text">
-            NoteWise AI
-          </SidebarGroupLabel>
-        </SidebarGroup>
+        {/* Logo and Gmail Section */}
+        <div className="p-4 border-b border-border/50">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
+              <Brain className="h-6 w-6 text-primary-foreground" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-lg font-bold gradient-primary bg-clip-text text-transparent">
+                NoteWise AI
+              </h2>
+            </div>
+            <a 
+              href={`mailto:${user.email}`}
+              className="p-2 rounded-lg hover:bg-primary/10 transition-smooth"
+              title="Contact via Gmail"
+            >
+              <Mail className="h-5 w-5 text-muted-foreground hover:text-primary" />
+            </a>
+          </div>
+        </div>
 
         <SidebarGroup>
           <SidebarGroupContent>
@@ -194,21 +210,17 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
                     onFolderSelect(null);
                     onViewChange('notes');
                   }}
-                  isActive={location.pathname === "/app" && selectedFolderId === null}
+                  isActive={currentView === 'notes' && selectedFolderId === null}
                   className="transition-smooth hover:bg-primary/10 hover:text-primary"
                 >
                   <FileText className="h-4 w-4" />
-                  <span>Notes</span>
+                  <span>All Notes</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton 
-                  onClick={() => {
-                    toast({
-                      title: "Tasks",
-                      description: "Tasks feature coming soon!",
-                    });
-                  }}
+                  onClick={() => onViewChange('tasks')}
+                  isActive={currentView === 'tasks'}
                   className="transition-smooth hover:bg-primary/10 hover:text-primary"
                 >
                   <CheckSquare className="h-4 w-4" />
@@ -217,26 +229,8 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton 
-                  onClick={() => {
-                    toast({
-                      title: "Files",
-                      description: "Files feature coming soon!",
-                    });
-                  }}
-                  className="transition-smooth hover:bg-primary/10 hover:text-primary"
-                >
-                  <Folder className="h-4 w-4" />
-                  <span>Files</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton 
-                  onClick={() => {
-                    toast({
-                      title: "Trash",
-                      description: "Trash feature coming soon!",
-                    });
-                  }}
+                  onClick={() => onViewChange('trash')}
+                  isActive={currentView === 'trash'}
                   className="transition-smooth hover:bg-primary/10 hover:text-primary"
                 >
                   <Trash className="h-4 w-4" />

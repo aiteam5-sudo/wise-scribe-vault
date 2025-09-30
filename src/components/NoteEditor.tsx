@@ -152,10 +152,7 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
       await transcription.connect();
       setIsRecording(true);
 
-      toast({
-        title: "Live transcription started",
-        description: "Speak now - your words will appear in real-time",
-      });
+      // Start transcription silently
     } catch (error: any) {
       toast({
         title: "Failed to start transcription",
@@ -172,10 +169,7 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
     }
     setIsRecording(false);
     
-    toast({
-      title: "Transcription stopped",
-      description: "Your transcription has been saved to the note",
-    });
+    // Stop transcription silently
   };
 
   // Cleanup on unmount
@@ -260,10 +254,7 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
         .eq('id', noteId);
     }
 
-    toast({
-      title: "Note replaced",
-      description: "Your note has been replaced with the beautifully formatted AI summary.",
-    });
+    // Replace note silently
   };
 
   const handleGenerateTitle = async () => {
@@ -315,10 +306,7 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
         .eq('id', noteId);
     }
 
-    toast({
-      title: "Title updated",
-      description: "Your note title has been updated.",
-    });
+    // Update title silently
   };
 
   const handleDuplicate = async () => {
@@ -343,10 +331,7 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
         variant: "destructive",
       });
     } else {
-      toast({
-        title: "Note duplicated",
-        description: "A copy of your note has been created.",
-      });
+      // Duplicate note silently
       onNoteCreated(data.id);
     }
   };

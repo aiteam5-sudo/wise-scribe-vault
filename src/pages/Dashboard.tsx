@@ -6,6 +6,8 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { NoteEditor } from "@/components/NoteEditor";
 import { NotesList } from "@/components/NotesList";
 import { EnhancedSearchView } from "@/components/EnhancedSearchView";
+import { TasksList } from "@/components/TasksList";
+import { TrashView } from "@/components/TrashView";
 import { AIChat } from "@/components/AIChat";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
@@ -15,9 +17,14 @@ import type { User } from "@supabase/supabase-js";
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
-  const [currentView, setCurrentView] = useState<'notes' | 'search'>('notes');
+  const [currentView, setCurrentView] = useState<'notes' | 'search' | 'tasks' | 'trash'>('notes');
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem("darkMode") === "true" || document.documentElement.classList.contains("dark");
+    }
+    return false;
+  });
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -40,11 +47,12 @@ const Dashboard = () => {
       }
     });
 
-    // Initialize dark mode
+    // Initialize dark mode on mount
     const darkMode = localStorage.getItem("darkMode") === "true";
-    setIsDark(darkMode);
-    if (darkMode) {
+    if (darkMode && !document.documentElement.classList.contains("dark")) {
       document.documentElement.classList.add("dark");
+    } else if (!darkMode && document.documentElement.classList.contains("dark")) {
+      document.documentElement.classList.remove("dark");
     }
 
     return () => subscription.unsubscribe();
@@ -87,6 +95,7 @@ const Dashboard = () => {
           onViewChange={setCurrentView}
           selectedFolderId={selectedFolderId}
           onFolderSelect={setSelectedFolderId}
+          currentView={currentView}
         />
         <main className="flex-1 flex flex-col">
           <header className="h-14 border-b border-border/50 bg-card/30 backdrop-blur-xl flex items-center px-4 gap-3">
@@ -110,6 +119,10 @@ const Dashboard = () => {
                 setCurrentView('notes');
               }}
             />
+          ) : currentView === 'tasks' ? (
+            <TasksList userId={user.id} />
+          ) : currentView === 'trash' ? (
+            <TrashView userId={user.id} />
           ) : (
             <>
               <NotesList

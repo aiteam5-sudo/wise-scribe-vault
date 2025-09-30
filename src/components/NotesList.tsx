@@ -296,10 +296,7 @@ export function NotesList({ userId, selectedNoteId, onNoteSelect, folderId }: No
           .eq('id', update.id);
       }
 
-      toast({
-        title: "Notes reordered",
-        description: "Your notes have been rearranged successfully.",
-      });
+      // Update positions silently without toast
     } catch (error: any) {
       toast({
         title: "Error reordering notes",
