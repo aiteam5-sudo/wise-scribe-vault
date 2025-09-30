@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Mic, MicOff, Sparkles, Loader2, Trash2, Replace, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { RealtimeTranscription } from "@/utils/RealtimeTranscription";
+import { RichTextEditor } from "./RichTextEditor";
 import {
   Popover,
   PopoverContent,
@@ -388,11 +388,11 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
-        <Textarea
+        <RichTextEditor
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={setContent}
           placeholder="Start typing or record your thoughts..."
-          className="min-h-[400px] border-none focus-visible:ring-0 resize-none text-base"
+          className="min-h-[400px]"
         />
 
         {(summary || actionItems.length > 0) && (
