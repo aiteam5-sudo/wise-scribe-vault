@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Folder, Search, LogOut, Plus, FolderPlus } from "lucide-react";
+import { Folder, Search, LogOut, Plus, FolderPlus, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -16,6 +16,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import type { User } from "@supabase/supabase-js";
@@ -39,6 +55,11 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
   const [newFolderName, setNewFolderName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
+  const [editFolderName, setEditFolderName] = useState("");
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deletingFolder, setDeletingFolder] = useState<Folder | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -86,6 +107,60 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
       fetchFolders();
     }
     setIsCreating(false);
+  };
+
+  const handleRenameFolder = async () => {
+    if (!editingFolder || !editFolderName.trim()) return;
+
+    const { error } = await supabase
+      .from('folders')
+      .update({ name: editFolderName.trim() })
+      .eq('id', editingFolder.id);
+
+    if (error) {
+      toast({
+        title: "Error renaming folder",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Folder renamed",
+        description: `Folder renamed to "${editFolderName}".`,
+      });
+      setEditDialogOpen(false);
+      setEditingFolder(null);
+      setEditFolderName("");
+      fetchFolders();
+    }
+  };
+
+  const handleDeleteFolder = async () => {
+    if (!deletingFolder) return;
+
+    const { error } = await supabase
+      .from('folders')
+      .delete()
+      .eq('id', deletingFolder.id);
+
+    if (error) {
+      toast({
+        title: "Error deleting folder",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Folder deleted",
+        description: `"${deletingFolder.name}" has been deleted.`,
+      });
+      if (selectedFolderId === deletingFolder.id) {
+        onFolderSelect(null);
+      }
+      setDeleteDialogOpen(false);
+      setDeletingFolder(null);
+      fetchFolders();
+    }
   };
 
   return (
@@ -168,16 +243,52 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
             <SidebarMenu>
               {folders.map((folder) => (
                 <SidebarMenuItem key={folder.id}>
-                  <SidebarMenuButton
-                    onClick={() => {
-                      onFolderSelect(folder.id);
-                      onViewChange('notes');
-                    }}
-                    isActive={selectedFolderId === folder.id}
-                  >
-                    <Folder className="h-4 w-4" style={{ color: folder.color }} />
-                    <span>{folder.name}</span>
-                  </SidebarMenuButton>
+                  <div className="flex items-center w-full group">
+                    <SidebarMenuButton
+                      onClick={() => {
+                        onFolderSelect(folder.id);
+                        onViewChange('notes');
+                      }}
+                      isActive={selectedFolderId === folder.id}
+                      className="flex-1"
+                    >
+                      <Folder className="h-4 w-4" style={{ color: folder.color }} />
+                      <span>{folder.name}</span>
+                    </SidebarMenuButton>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setEditingFolder(folder);
+                            setEditFolderName(folder.name);
+                            setEditDialogOpen(true);
+                          }}
+                        >
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Rename
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setDeletingFolder(folder);
+                            setDeleteDialogOpen(true);
+                          }}
+                          className="text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
@@ -198,6 +309,60 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
           Sign Out
         </Button>
       </SidebarFooter>
+
+      {/* Edit Folder Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename Folder</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-folder-name">Folder Name</Label>
+              <Input
+                id="edit-folder-name"
+                placeholder="Enter folder name"
+                value={editFolderName}
+                onChange={(e) => setEditFolderName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleRenameFolder();
+                  }
+                }}
+              />
+            </div>
+            <Button
+              onClick={handleRenameFolder}
+              disabled={!editFolderName.trim()}
+              className="w-full"
+            >
+              <Pencil className="mr-2 h-4 w-4" />
+              Rename Folder
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Folder Confirmation */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Folder</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deletingFolder?.name}"? This will also remove all notes in this folder.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteFolder}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sidebar>
   );
 }

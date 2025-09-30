@@ -1,9 +1,19 @@
 import { useState, useEffect } from "react";
-import { Plus, FileText } from "lucide-react";
+import { Plus, FileText, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface Note {
   id: string;
@@ -23,6 +33,8 @@ interface NotesListProps {
 export function NotesList({ userId, selectedNoteId, onNoteSelect, folderId }: NotesListProps) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deletingNote, setDeletingNote] = useState<Note | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -93,6 +105,34 @@ export function NotesList({ userId, selectedNoteId, onNoteSelect, folderId }: No
     }
   };
 
+  const handleDeleteNote = async () => {
+    if (!deletingNote) return;
+
+    const { error } = await supabase
+      .from('notes')
+      .delete()
+      .eq('id', deletingNote.id);
+
+    if (error) {
+      toast({
+        title: "Error deleting note",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Note deleted",
+        description: `"${deletingNote.title}" has been deleted.`,
+      });
+      if (selectedNoteId === deletingNote.id) {
+        onNoteSelect(notes[0]?.id || '');
+      }
+      setDeleteDialogOpen(false);
+      setDeletingNote(null);
+      fetchNotes();
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -135,29 +175,65 @@ export function NotesList({ userId, selectedNoteId, onNoteSelect, folderId }: No
           </div>
         ) : (
           notes.map((note) => (
-            <button
-              key={note.id}
-              onClick={() => onNoteSelect(note.id)}
-              className={cn(
-                "w-full text-left p-4 border-b hover:bg-accent transition-colors",
-                selectedNoteId === note.id && "bg-accent border-l-4 border-l-primary"
-              )}
-            >
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <h3 className="font-semibold text-base truncate flex-1">
-                  {note.title}
-                </h3>
-                <p className="text-xs text-muted-foreground shrink-0">
-                  {formatDate(note.updated_at)}
+            <div key={note.id} className="relative group">
+              <button
+                onClick={() => onNoteSelect(note.id)}
+                className={cn(
+                  "w-full text-left p-4 border-b hover:bg-accent transition-colors",
+                  selectedNoteId === note.id && "bg-accent border-l-4 border-l-primary"
+                )}
+              >
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <h3 className="font-semibold text-base truncate flex-1">
+                    {note.title}
+                  </h3>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <p className="text-xs text-muted-foreground">
+                      {formatDate(note.updated_at)}
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeletingNote(note);
+                        setDeleteDialogOpen(true);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground line-clamp-2">
+                  {getPreview(note.content)}
                 </p>
-              </div>
-              <p className="text-sm text-muted-foreground line-clamp-2">
-                {getPreview(note.content)}
-              </p>
-            </button>
+              </button>
+            </div>
           ))
         )}
       </div>
+
+      {/* Delete Note Confirmation */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Note</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deletingNote?.title}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteNote}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
