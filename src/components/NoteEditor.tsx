@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Mic, MicOff, Sparkles, Loader2, Trash2, Replace, Wand2, MoreVertical, Share2, Copy, Tag, Image, AudioLines, ScanLine, StickyNote, Calendar, Minimize2, Maximize2, Home, FileDown, Mail, MessageCircle } from "lucide-react";
+import { Mic, MicOff, Sparkles, Loader2, Trash2, Replace, Wand2, MoreVertical, Share2, Copy, Tag, Image, AudioLines, ScanLine, StickyNote, Calendar, Minimize2, Maximize2, FileDown, Mail, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { RealtimeTranscription } from "@/utils/RealtimeTranscription";
 import { RichTextEditor } from "./RichTextEditor";
 import { cn } from "@/lib/utils";
-import { exportNoteToPDF, shareViaEmail, shareViaWhatsApp } from "@/utils/pdfExport";
+import { exportNoteToPDF, shareViaEmail, shareViaWhatsApp, shareViaWhatsAppPDF } from "@/utils/pdfExport";
 import {
   Popover,
   PopoverContent,
@@ -401,12 +401,33 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
       shareViaWhatsApp(title || 'Untitled Note', content);
       toast({
         title: "Opening WhatsApp",
-        description: "Share your note via WhatsApp.",
+        description: "Share your complete note via WhatsApp.",
       });
     } catch (error: any) {
       toast({
         title: "Share failed",
         description: error.message || "Failed to open WhatsApp.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleShareWhatsAppPDF = () => {
+    if (!content.trim()) {
+      toast({
+        title: "No content to share",
+        description: "Please add some content to your note first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      shareViaWhatsAppPDF(title || 'Untitled Note', content);
+    } catch (error: any) {
+      toast({
+        title: "Share failed",
+        description: error.message || "Failed to prepare PDF.",
         variant: "destructive",
       });
     }
@@ -466,15 +487,6 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
     <div className={`flex-1 flex flex-col ${isMaximized ? 'fixed inset-0 z-50 bg-background' : ''}`}>
       <div className="border-b p-4 space-y-3 glass-effect shadow-lg">
         <div className="flex items-center justify-between mb-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/dashboard')}
-            title="Back to Home"
-            className="hover:bg-primary/20 hover:text-primary transition-smooth hover:shadow-glow"
-          >
-            <Home className="h-4 w-4" />
-          </Button>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -577,6 +589,10 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
               <DropdownMenuItem onClick={handleShareWhatsApp}>
                 <MessageCircle className="mr-2 h-4 w-4" />
                 Share via WhatsApp
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleShareWhatsAppPDF}>
+                <FileDown className="mr-2 h-4 w-4" />
+                Share PDF via WhatsApp
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleDuplicate}>

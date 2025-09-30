@@ -37,8 +37,14 @@ export function shareViaWhatsApp(title: string, content: string): void {
   const tempDiv = document.createElement('div');
   tempDiv.innerHTML = content;
   const plainText = tempDiv.textContent || tempDiv.innerText || '';
-  const maxLength = 1000;
-  const truncatedContent = plainText.length > maxLength ? plainText.substring(0, maxLength) + '...' : plainText;
-  const message = encodeURIComponent(`*${title}*\n\n${truncatedContent}`);
+  const message = encodeURIComponent(`*${title}*\n\n${plainText}`);
   window.open(`https://wa.me/?text=${message}`, '_blank');
+}
+
+export function shareViaWhatsAppPDF(title: string, content: string): void {
+  // Open print dialog
+  exportNoteToPDF(title, content);
+  
+  // Guide user with instructions
+  alert('After saving as PDF:\n1. Save the PDF to your device\n2. Open WhatsApp\n3. Attach the PDF file\n\nThe print dialog is opening now...');
 }
