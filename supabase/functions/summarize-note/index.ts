@@ -68,13 +68,21 @@ serve(async (req) => {
     
     console.log('AI Response:', aiResponse);
     
-    // Parse the JSON response from AI
+    // Parse the JSON response from AI, handling markdown code blocks
     let parsedResponse;
     try {
-      parsedResponse = JSON.parse(aiResponse);
+      // Remove markdown code block if present
+      let jsonString = aiResponse.trim();
+      if (jsonString.startsWith('```json')) {
+        jsonString = jsonString.replace(/^```json\s*\n/, '').replace(/\n```$/, '');
+      } else if (jsonString.startsWith('```')) {
+        jsonString = jsonString.replace(/^```\s*\n/, '').replace(/\n```$/, '');
+      }
+      
+      parsedResponse = JSON.parse(jsonString);
     } catch (e) {
       // If parsing fails, try to extract summary and action items manually
-      console.log('Failed to parse JSON, extracting manually');
+      console.error('Failed to parse JSON:', e);
       parsedResponse = {
         summary: aiResponse.split('\n')[0] || aiResponse.substring(0, 200),
         actionItems: []
