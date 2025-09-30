@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, FileText, Trash2 } from "lucide-react";
+import { Plus, FileText, Trash2, MoreVertical, Share2, Palette, FolderInput } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +14,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 interface Note {
   id: string;
@@ -151,7 +158,9 @@ export function NotesList({ userId, selectedNoteId, onNoteSelect, folderId }: No
   };
 
   const getPreview = (content: string) => {
-    return content.substring(0, 100) || 'No content';
+    // Strip HTML tags for preview
+    const strippedContent = content.replace(/<[^>]*>/g, '');
+    return strippedContent.substring(0, 100) || 'No content';
   };
 
   return (
@@ -187,22 +196,62 @@ export function NotesList({ userId, selectedNoteId, onNoteSelect, folderId }: No
                   <h3 className="font-semibold text-base truncate flex-1">
                     {note.title}
                   </h3>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1 shrink-0">
                     <p className="text-xs text-muted-foreground">
                       {formatDate(note.updated_at)}
                     </p>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeletingNote(note);
-                        setDeleteDialogOpen(true);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenuItem onClick={() => {
+                          toast({
+                            title: "Share feature",
+                            description: "Share functionality coming soon!",
+                          });
+                        }}>
+                          <Share2 className="mr-2 h-4 w-4" />
+                          Share
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setDeletingNote(note);
+                            setDeleteDialogOpen(true);
+                          }}
+                          className="text-destructive"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => {
+                          toast({
+                            title: "Color code",
+                            description: "Color coding coming soon!",
+                          });
+                        }}>
+                          <Palette className="mr-2 h-4 w-4" />
+                          Color Code
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => {
+                          toast({
+                            title: "Move note",
+                            description: "Move to folder coming soon!",
+                          });
+                        }}>
+                          <FolderInput className="mr-2 h-4 w-4" />
+                          Move
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground line-clamp-2">

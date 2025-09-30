@@ -575,7 +575,10 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
             </div>
             
             {summary && (
-              <div dangerouslySetInnerHTML={{ __html: summary }} />
+              <div 
+                className="prose prose-sm max-w-none dark:prose-invert"
+                dangerouslySetInnerHTML={{ __html: summary }} 
+              />
             )}
             
             {actionItems.length > 0 && (

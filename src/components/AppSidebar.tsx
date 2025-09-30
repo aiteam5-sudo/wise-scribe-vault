@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Folder, Search, LogOut, Plus, FolderPlus, MoreVertical, Pencil, Trash2, User as UserIcon } from "lucide-react";
+import { Folder, Search, LogOut, Plus, FolderPlus, MoreVertical, Pencil, Trash2, User as UserIcon, Settings, CheckSquare, FileText, Trash } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -187,14 +187,58 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
                   }}
                   isActive={selectedFolderId === null}
                 >
+                  <FileText className="h-4 w-4" />
+                  <span>Notes</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => {
+                  toast({
+                    title: "Tasks",
+                    description: "Tasks feature coming soon!",
+                  });
+                }}>
+                  <CheckSquare className="h-4 w-4" />
+                  <span>Tasks</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => {
+                  toast({
+                    title: "Files",
+                    description: "Files feature coming soon!",
+                  });
+                }}>
                   <Folder className="h-4 w-4" />
-                  <span>All Notes</span>
+                  <span>Files</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => {
+                  toast({
+                    title: "Trash",
+                    description: "Trash feature coming soon!",
+                  });
+                }}>
+                  <Trash className="h-4 w-4" />
+                  <span>Trash</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton onClick={() => onViewChange('search')}>
                   <Search className="h-4 w-4" />
                   <span>Search</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => {
+                  toast({
+                    title: "Settings",
+                    description: "Settings feature coming soon!",
+                  });
+                }}>
+                  <Settings className="h-4 w-4" />
+                  <span>Settings</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
