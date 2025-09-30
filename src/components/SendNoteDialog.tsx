@@ -61,9 +61,14 @@ export function SendNoteDialog({ open, onOpenChange, noteTitle, noteContent }: S
       setMessage("");
       onOpenChange(false);
     } catch (error: any) {
+      const errorMessage = error.message || "An unexpected error occurred";
+      const isDomainVerificationError = errorMessage.includes("verify your domain") || errorMessage.includes("verify a domain");
+      
       toast({
         title: "Failed to send email",
-        description: error.message,
+        description: isDomainVerificationError 
+          ? "Please verify your domain at resend.com/domains to send emails to any recipient."
+          : errorMessage,
         variant: "destructive",
       });
     } finally {
