@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { NoteEditor } from "@/components/NoteEditor";
 import { NotesList } from "@/components/NotesList";
 import { EnhancedSearchView } from "@/components/EnhancedSearchView";
 import { AIChat } from "@/components/AIChat";
 import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@/components/ui/button";
+import { Moon, Sun } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
 const Dashboard = () => {
@@ -15,6 +17,7 @@ const Dashboard = () => {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'notes' | 'search'>('notes');
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [isDark, setIsDark] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -37,6 +40,13 @@ const Dashboard = () => {
       }
     });
 
+    // Initialize dark mode
+    const darkMode = localStorage.getItem("darkMode") === "true";
+    setIsDark(darkMode);
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    }
+
     return () => subscription.unsubscribe();
   }, [navigate]);
 
@@ -50,6 +60,17 @@ const Dashboard = () => {
         description: error.message,
         variant: "destructive",
       });
+    }
+  };
+
+  const toggleDarkMode = () => {
+    const newDarkMode = !isDark;
+    setIsDark(newDarkMode);
+    localStorage.setItem("darkMode", String(newDarkMode));
+    if (newDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
     }
   };
 
@@ -67,7 +88,20 @@ const Dashboard = () => {
           selectedFolderId={selectedFolderId}
           onFolderSelect={setSelectedFolderId}
         />
-        <main className="flex-1 flex">
+        <main className="flex-1 flex flex-col">
+          <header className="h-14 border-b border-border/50 bg-card/30 backdrop-blur-xl flex items-center px-4 gap-3">
+            <SidebarTrigger className="hover:bg-primary/10 transition-smooth" />
+            <div className="flex-1" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleDarkMode}
+              className="hover:bg-primary/10 hover:text-primary transition-smooth"
+            >
+              {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </Button>
+          </header>
+          <div className="flex-1 flex">
           {currentView === 'search' ? (
             <EnhancedSearchView
               userId={user.id}
@@ -91,6 +125,7 @@ const Dashboard = () => {
               />
             </>
           )}
+          </div>
         </main>
         <AIChat />
       </div>

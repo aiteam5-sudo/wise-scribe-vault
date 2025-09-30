@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Folder, Search, LogOut, Plus, FolderPlus, MoreVertical, Pencil, Trash2, User as UserIcon, Settings, CheckSquare, FileText, Trash } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Folder, Search, LogOut, Plus, FolderPlus, MoreVertical, Pencil, Trash2, User as UserIcon, Settings, CheckSquare, FileText, Trash, Home } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -63,6 +63,7 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     fetchFolders();
@@ -167,8 +168,6 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
 
   return (
     <Sidebar className="border-r glass-effect">
-      <SidebarTrigger className="m-4" />
-      
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-xl font-bold gradient-primary bg-clip-text text-transparent glow-text">
@@ -181,70 +180,86 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
+                  onClick={() => navigate("/")}
+                  isActive={location.pathname === "/"}
+                  className="transition-smooth hover:bg-primary/10 hover:text-primary"
+                >
+                  <Home className="h-4 w-4" />
+                  <span>Home</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
                   onClick={() => {
                     onFolderSelect(null);
                     onViewChange('notes');
                   }}
-                  isActive={selectedFolderId === null}
+                  isActive={location.pathname === "/app" && selectedFolderId === null}
+                  className="transition-smooth hover:bg-primary/10 hover:text-primary"
                 >
                   <FileText className="h-4 w-4" />
                   <span>Notes</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => {
-                  toast({
-                    title: "Tasks",
-                    description: "Tasks feature coming soon!",
-                  });
-                }}>
+                <SidebarMenuButton 
+                  onClick={() => {
+                    toast({
+                      title: "Tasks",
+                      description: "Tasks feature coming soon!",
+                    });
+                  }}
+                  className="transition-smooth hover:bg-primary/10 hover:text-primary"
+                >
                   <CheckSquare className="h-4 w-4" />
                   <span>Tasks</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => {
-                  toast({
-                    title: "Files",
-                    description: "Files feature coming soon!",
-                  });
-                }}>
+                <SidebarMenuButton 
+                  onClick={() => {
+                    toast({
+                      title: "Files",
+                      description: "Files feature coming soon!",
+                    });
+                  }}
+                  className="transition-smooth hover:bg-primary/10 hover:text-primary"
+                >
                   <Folder className="h-4 w-4" />
                   <span>Files</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => {
-                  toast({
-                    title: "Trash",
-                    description: "Trash feature coming soon!",
-                  });
-                }}>
+                <SidebarMenuButton 
+                  onClick={() => {
+                    toast({
+                      title: "Trash",
+                      description: "Trash feature coming soon!",
+                    });
+                  }}
+                  className="transition-smooth hover:bg-primary/10 hover:text-primary"
+                >
                   <Trash className="h-4 w-4" />
                   <span>Trash</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => onViewChange('search')}>
+                <SidebarMenuButton 
+                  onClick={() => onViewChange('search')}
+                  className="transition-smooth hover:bg-primary/10 hover:text-primary"
+                >
                   <Search className="h-4 w-4" />
                   <span>Search</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => {
-                  toast({
-                    title: "Settings",
-                    description: "Settings feature coming soon!",
-                  });
-                }}>
+                <SidebarMenuButton 
+                  onClick={() => navigate('/account')}
+                  isActive={location.pathname === "/account"}
+                  className="transition-smooth hover:bg-primary/10 hover:text-primary"
+                >
                   <Settings className="h-4 w-4" />
                   <span>Settings</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton onClick={() => navigate('/account')}>
-                  <UserIcon className="h-4 w-4" />
-                  <span>Account</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
