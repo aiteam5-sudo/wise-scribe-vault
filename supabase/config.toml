@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.summarize-note]
 verify_jwt = true
+
+[functions.realtime-transcribe]
+verify_jwt = false

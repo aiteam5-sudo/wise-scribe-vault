@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Mic, MicOff, Sparkles, Loader2, Trash2, Replace } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { RealtimeTranscription } from "@/utils/RealtimeTranscription";
 
 interface NoteEditorProps {
   userId: string;
@@ -21,7 +22,7 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
   const [actionItems, setActionItems] = useState<string[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [isSummarizing, setIsSummarizing] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const realtimeRef = useRef<RealtimeTranscription | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -110,67 +111,62 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      const chunks: Blob[] = [];
+      const transcription = new RealtimeTranscription(
+        (text: string) => {
+          // Append transcribed text in real-time
+          setContent(prev => {
+            const newContent = prev + (prev && !prev.endsWith(' ') ? ' ' : '') + text;
+            return newContent;
+          });
+        },
+        (error: string) => {
+          toast({
+            title: "Transcription error",
+            description: error,
+            variant: "destructive",
+          });
+          stopRecording();
+        }
+      );
 
-      recorder.ondataavailable = (e) => chunks.push(e.data);
-      recorder.onstop = async () => {
-        const blob = new Blob(chunks, { type: 'audio/webm' });
-        await transcribeAudio(blob);
-        stream.getTracks().forEach(track => track.stop());
-      };
-
-      recorder.start();
-      setMediaRecorder(recorder);
+      realtimeRef.current = transcription;
+      await transcription.connect();
       setIsRecording(true);
-    } catch (error) {
+
       toast({
-        title: "Microphone access denied",
-        description: "Please allow microphone access to record audio.",
+        title: "Live transcription started",
+        description: "Speak now - your words will appear in real-time",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Failed to start transcription",
+        description: error.message || "Could not access microphone",
         variant: "destructive",
       });
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorder && isRecording) {
-      mediaRecorder.stop();
-      setIsRecording(false);
-      setMediaRecorder(null);
+    if (realtimeRef.current) {
+      realtimeRef.current.disconnect();
+      realtimeRef.current = null;
     }
+    setIsRecording(false);
+    
+    toast({
+      title: "Transcription stopped",
+      description: "Your transcription has been saved to the note",
+    });
   };
 
-  const transcribeAudio = async (audioBlob: Blob) => {
-    try {
-      const reader = new FileReader();
-      reader.readAsDataURL(audioBlob);
-      
-      reader.onloadend = async () => {
-        const base64Audio = reader.result?.toString().split(',')[1];
-        
-        const { data, error } = await supabase.functions.invoke('transcribe-audio', {
-          body: { audio: base64Audio }
-        });
-
-        if (error) throw error;
-
-        if (data?.text) {
-          setContent(prev => prev + (prev ? '\n\n' : '') + data.text);
-          toast({
-            title: "Transcription complete",
-            description: "Audio has been transcribed and added to your note.",
-          });
-        }
-      };
-    } catch (error: any) {
-      toast({
-        title: "Transcription failed",
-        description: error.message || "Failed to transcribe audio. Make sure you have configured the OpenAI API key.",
-        variant: "destructive",
-      });
-    }
-  };
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (realtimeRef.current) {
+        realtimeRef.current.disconnect();
+      }
+    };
+  }, []);
 
   const handleSummarize = async () => {
     if (!content.trim()) {
