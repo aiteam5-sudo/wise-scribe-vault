@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Folder, Search, LogOut, Plus, FolderPlus, MoreVertical, Pencil, Trash2, User as UserIcon, Settings, CheckSquare, FileText, Trash, Home, Mail, Brain } from "lucide-react";
+import { Folder, Search, LogOut, Plus, FolderPlus, MoreVertical, Pencil, Trash2, User as UserIcon, Settings, CheckSquare, FileText, Trash, Mail, Brain } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -195,16 +195,6 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={() => navigate("/")}
-                  isActive={location.pathname === "/"}
-                  className="transition-smooth hover:bg-primary/10 hover:text-primary"
-                >
-                  <Home className="h-4 w-4" />
-                  <span>Home</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={() => {
