@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Folder, Search, LogOut, Plus, FolderPlus, MoreVertical, Pencil, Trash2, User as UserIcon, Settings, CheckSquare, FileText, Trash, Mail, Brain } from "lucide-react";
+import { Folder, Search, LogOut, Plus, FolderPlus, MoreVertical, Pencil, Trash2, User as UserIcon, Settings, CheckSquare, FileText, Trash, Mail, Brain, ChevronRight } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -41,6 +41,7 @@ interface Folder {
   id: string;
   name: string;
   color: string;
+  parent_id: string | null;
 }
 
 interface AppSidebarProps {
@@ -62,6 +63,8 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deletingFolder, setDeletingFolder] = useState<Folder | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+  const [parentFolderForNew, setParentFolderForNew] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -93,6 +96,7 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
       .insert([{
         user_id: user.id,
         name: newFolderName.trim(),
+        parent_id: parentFolderForNew,
       }]);
 
     if (error) {
@@ -108,9 +112,113 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
       });
       setNewFolderName("");
       setDialogOpen(false);
+      setParentFolderForNew(null);
       fetchFolders();
+      if (parentFolderForNew) {
+        setExpandedFolders(prev => new Set(prev).add(parentFolderForNew));
+      }
     }
     setIsCreating(false);
+  };
+
+  const toggleFolder = (folderId: string) => {
+    setExpandedFolders(prev => {
+      const next = new Set(prev);
+      if (next.has(folderId)) {
+        next.delete(folderId);
+      } else {
+        next.add(folderId);
+      }
+      return next;
+    });
+  };
+
+  const getChildFolders = (parentId: string | null) => {
+    return folders.filter(f => f.parent_id === parentId);
+  };
+
+  const renderFolder = (folder: Folder, level: number = 0) => {
+    const childFolders = getChildFolders(folder.id);
+    const hasChildren = childFolders.length > 0;
+    const isExpanded = expandedFolders.has(folder.id);
+
+    return (
+      <div key={folder.id}>
+        <SidebarMenuItem>
+          <div className="flex items-center w-full group">
+            {hasChildren && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 p-0 shrink-0"
+                onClick={() => toggleFolder(folder.id)}
+              >
+                <ChevronRight className={`h-3 w-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+              </Button>
+            )}
+            <SidebarMenuButton
+              onClick={() => {
+                onFolderSelect(folder.id);
+                onViewChange('notes');
+              }}
+              isActive={selectedFolderId === folder.id}
+              className="flex-1"
+              style={{ paddingLeft: hasChildren ? '0.5rem' : `${level * 1 + 0.5}rem` }}
+            >
+              <Folder className="h-4 w-4" style={{ color: folder.color }} />
+              <span>{folder.name}</span>
+            </SidebarMenuButton>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => {
+                    setParentFolderForNew(folder.id);
+                    setDialogOpen(true);
+                  }}
+                >
+                  <FolderPlus className="mr-2 h-4 w-4" />
+                  New Subfolder
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setEditingFolder(folder);
+                    setEditFolderName(folder.name);
+                    setEditDialogOpen(true);
+                  }}
+                >
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Rename
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setDeletingFolder(folder);
+                    setDeleteDialogOpen(true);
+                  }}
+                  className="text-destructive"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </SidebarMenuItem>
+        {hasChildren && isExpanded && (
+          <div style={{ paddingLeft: '1rem' }}>
+            {childFolders.map(child => renderFolder(child, level + 1))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   const handleRenameFolder = async () => {
@@ -254,7 +362,10 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
         <SidebarGroup>
           <div className="flex items-center justify-between px-4 py-2">
             <SidebarGroupLabel>Folders</SidebarGroupLabel>
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <Dialog open={dialogOpen} onOpenChange={(open) => {
+              setDialogOpen(open);
+              if (!open) setParentFolderForNew(null);
+            }}>
               <DialogTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-6 w-6">
                   <Plus className="h-4 w-4" />
@@ -262,7 +373,9 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Create New Folder</DialogTitle>
+                  <DialogTitle>
+                    {parentFolderForNew ? 'Create New Subfolder' : 'Create New Folder'}
+                  </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div className="space-y-2">
@@ -293,56 +406,7 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
           </div>
           <SidebarGroupContent>
             <SidebarMenu>
-              {folders.map((folder) => (
-                <SidebarMenuItem key={folder.id}>
-                  <div className="flex items-center w-full group">
-                    <SidebarMenuButton
-                      onClick={() => {
-                        onFolderSelect(folder.id);
-                        onViewChange('notes');
-                      }}
-                      isActive={selectedFolderId === folder.id}
-                      className="flex-1"
-                    >
-                      <Folder className="h-4 w-4" style={{ color: folder.color }} />
-                      <span>{folder.name}</span>
-                    </SidebarMenuButton>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setEditingFolder(folder);
-                            setEditFolderName(folder.name);
-                            setEditDialogOpen(true);
-                          }}
-                        >
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Rename
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setDeletingFolder(folder);
-                            setDeleteDialogOpen(true);
-                          }}
-                          className="text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </SidebarMenuItem>
-              ))}
+              {getChildFolders(null).map((folder) => renderFolder(folder))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
