@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Folder, Search, LogOut, Plus, FolderPlus, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Folder, Search, LogOut, Plus, FolderPlus, MoreVertical, Pencil, Trash2, User as UserIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -61,6 +62,7 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
   const [deletingFolder, setDeletingFolder] = useState<Folder | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchFolders();
@@ -193,6 +195,12 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
                 <SidebarMenuButton onClick={() => onViewChange('search')}>
                   <Search className="h-4 w-4" />
                   <span>Search</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={() => navigate('/account')}>
+                  <UserIcon className="h-4 w-4" />
+                  <span>Account</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>

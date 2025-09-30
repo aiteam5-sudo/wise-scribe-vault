@@ -5,7 +5,8 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { NoteEditor } from "@/components/NoteEditor";
 import { NotesList } from "@/components/NotesList";
-import { SearchView } from "@/components/SearchView";
+import { EnhancedSearchView } from "@/components/EnhancedSearchView";
+import { AIChat } from "@/components/AIChat";
 import { useToast } from "@/components/ui/use-toast";
 import type { User } from "@supabase/supabase-js";
 
@@ -68,7 +69,7 @@ const Dashboard = () => {
         />
         <main className="flex-1 flex">
           {currentView === 'search' ? (
-            <SearchView
+            <EnhancedSearchView
               userId={user.id}
               onNoteSelect={(noteId) => {
                 setSelectedNoteId(noteId);
@@ -91,6 +92,7 @@ const Dashboard = () => {
             </>
           )}
         </main>
+        <AIChat />
       </div>
     </SidebarProvider>
   );
