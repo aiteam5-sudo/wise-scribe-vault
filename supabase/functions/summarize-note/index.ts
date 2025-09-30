@@ -35,29 +35,39 @@ serve(async (req) => {
         messages: [
           { 
             role: 'system', 
-            content: 'You are an expert note summarizer. Create detailed, easy-to-understand point-wise summaries that capture all key information. Use simple language and clear bullet points. Be thorough and comprehensive.' 
+            content: 'You are an expert note designer and summarizer. Create beautifully formatted, decorative HTML summaries that are visually appealing and easy to read. Use rich formatting with colors, different sizes, bold, italics, and underlines to make the content engaging and organized.' 
           },
           { 
             role: 'user', 
-            content: `Please analyze this note and provide:
+            content: `Please analyze this note and create a BEAUTIFULLY FORMATTED HTML summary with:
 
-1. A detailed point-wise summary covering ALL key information:
-   - Break down the content into clear, specific bullet points
-   - Use simple, easy-to-understand language
-   - Include important details, facts, and insights
-   - Make each point comprehensive but concise
-   - Use the • symbol for bullet points
+1. Use HTML tags with inline styles for rich formatting:
+   - <h1 style="color: #2563eb; font-size: 24px; font-weight: bold;">Main Heading</h1>
+   - <h2 style="color: #7c3aed; font-size: 20px; font-weight: bold;">Sub Heading</h2>
+   - <p style="font-size: 16px;">Regular text</p>
+   - <strong>Bold text</strong> for important points
+   - <em>Italic text</em> for emphasis
+   - <u>Underlined text</u> for key terms
+   - Use colors: #2563eb (blue), #7c3aed (purple), #dc2626 (red), #059669 (green), #ea580c (orange)
+   - <ul> and <li> for bullet points
 
-2. Extract any action items (if present)
+2. Make it DECORATIVE and VISUALLY APPEALING:
+   - Use different colors for different sections
+   - Mix bold, italic, and underline for emphasis
+   - Use larger headings for main topics
+   - Use colored text to highlight important information
+   - Create a clear visual hierarchy
+
+3. Extract action items as a separate array
 
 Note content:
 ${content}
 
 Format your response as JSON with:
-- "summary": A string containing detailed bullet points (use • for bullets, \\n for line breaks)
-- "actionItems": An array of action item strings
+- "formattedSummary": A string containing beautifully formatted HTML with colors, sizes, bold, italic, underline
+- "actionItems": An array of action item strings (plain text)
 
-Make the summary detailed enough that someone can understand the full content just by reading the points.` 
+Make it visually stunning and easy to understand!` 
           }
         ],
       }),
@@ -102,7 +112,7 @@ Make the summary detailed enough that someone can understand the full content ju
       // If parsing fails, try to extract summary and action items manually
       console.error('Failed to parse JSON:', e);
       parsedResponse = {
-        summary: aiResponse.split('\n')[0] || aiResponse.substring(0, 200),
+        formattedSummary: `<p style="font-size: 16px;">${aiResponse.split('\n')[0] || aiResponse.substring(0, 200)}</p>`,
         actionItems: []
       };
     }
@@ -111,7 +121,7 @@ Make the summary detailed enough that someone can understand the full content ju
 
     return new Response(
       JSON.stringify({ 
-        summary: parsedResponse.summary || '',
+        summary: parsedResponse.formattedSummary || parsedResponse.summary || '',
         actionItems: parsedResponse.actionItems || []
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -238,20 +238,30 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
   const handleReplaceWithSummary = async () => {
     if (!summary) return;
 
-    const newContent = summary + (actionItems.length > 0 ? '\n\n' + actionItems.map((item, i) => `${i + 1}. ${item}`).join('\n') : '');
-    setContent(newContent);
+    // Build formatted content with action items
+    let formattedContent = summary;
+    
+    if (actionItems.length > 0) {
+      formattedContent += '<br><br><h2 style="color: #dc2626; font-size: 20px; font-weight: bold;">Action Items</h2><ul>';
+      actionItems.forEach((item, i) => {
+        formattedContent += `<li style="font-size: 16px;"><strong style="color: #7c3aed;">${i + 1}.</strong> ${item}</li>`;
+      });
+      formattedContent += '</ul>';
+    }
+    
+    setContent(formattedContent);
     
     // Save the updated content
     if (noteId) {
       await supabase
         .from('notes')
-        .update({ content: newContent })
+        .update({ content: formattedContent })
         .eq('id', noteId);
     }
 
     toast({
       title: "Note replaced",
-      description: "Your note has been replaced with the AI summary.",
+      description: "Your note has been replaced with the beautifully formatted AI summary.",
     });
   };
 
