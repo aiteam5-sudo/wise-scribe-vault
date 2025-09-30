@@ -5,7 +5,16 @@ import {
   Italic, 
   Underline, 
   Type,
-  Palette
+  Palette,
+  List,
+  ListOrdered,
+  CheckSquare,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Indent,
+  Outdent,
+  Strikethrough
 } from "lucide-react";
 import {
   Select,
@@ -116,6 +125,105 @@ export const RichTextToolbar = ({ onFormat }: RichTextToolbarProps) => {
         title="Underline"
       >
         <Underline className="h-4 w-4" />
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8"
+        onClick={() => onFormat("strikeThrough")}
+        title="Strikethrough"
+      >
+        <Strikethrough className="h-4 w-4" />
+      </Button>
+
+      <div className="h-6 w-px bg-border mx-1" />
+
+      {/* Lists */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8"
+        onClick={() => onFormat("insertUnorderedList")}
+        title="Bullet List"
+      >
+        <List className="h-4 w-4" />
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8"
+        onClick={() => onFormat("insertOrderedList")}
+        title="Numbered List"
+      >
+        <ListOrdered className="h-4 w-4" />
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8"
+        onClick={() => onFormat("insertUnorderedList")}
+        title="Checklist"
+      >
+        <CheckSquare className="h-4 w-4" />
+      </Button>
+
+      <div className="h-6 w-px bg-border mx-1" />
+
+      {/* Alignment */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8"
+        onClick={() => onFormat("justifyLeft")}
+        title="Align Left"
+      >
+        <AlignLeft className="h-4 w-4" />
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8"
+        onClick={() => onFormat("justifyCenter")}
+        title="Align Center"
+      >
+        <AlignCenter className="h-4 w-4" />
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8"
+        onClick={() => onFormat("justifyRight")}
+        title="Align Right"
+      >
+        <AlignRight className="h-4 w-4" />
+      </Button>
+
+      <div className="h-6 w-px bg-border mx-1" />
+
+      {/* Indent */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8"
+        onClick={() => onFormat("indent")}
+        title="Indent"
+      >
+        <Indent className="h-4 w-4" />
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8"
+        onClick={() => onFormat("outdent")}
+        title="Outdent"
+      >
+        <Outdent className="h-4 w-4" />
       </Button>
 
       <div className="h-6 w-px bg-border mx-1" />

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Mic, MicOff, Sparkles, Loader2, Trash2, Replace, Wand2 } from "lucide-react";
+import { Mic, MicOff, Sparkles, Loader2, Trash2, Replace, Wand2, MoreVertical, Share2, Copy, Tag, Image, AudioLines, ScanLine, StickyNote, Calendar, Minimize2, Maximize2, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +14,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 interface NoteEditorProps {
   userId: string;
@@ -30,8 +38,10 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
   const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
   const [titleSuggestions, setTitleSuggestions] = useState<string[]>([]);
   const [showTitlePopover, setShowTitlePopover] = useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
   const realtimeRef = useRef<RealtimeTranscription | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (noteId) {
@@ -300,6 +310,85 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
     });
   };
 
+  const handleDuplicate = async () => {
+    if (!noteId) return;
+
+    const { data, error } = await supabase
+      .from('notes')
+      .insert({
+        user_id: userId,
+        title: `${title} (Copy)`,
+        content,
+        summary,
+        action_items: actionItems,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      toast({
+        title: "Error duplicating note",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Note duplicated",
+        description: "A copy of your note has been created.",
+      });
+      onNoteCreated(data.id);
+    }
+  };
+
+  const handleShare = () => {
+    toast({
+      title: "Share feature",
+      description: "Share functionality coming soon!",
+    });
+  };
+
+  const handleAddTag = () => {
+    toast({
+      title: "Add tag",
+      description: "Tag functionality coming soon!",
+    });
+  };
+
+  const handleAddImage = () => {
+    toast({
+      title: "Add image",
+      description: "Image upload coming soon!",
+    });
+  };
+
+  const handleAddAudio = () => {
+    toast({
+      title: "Add audio",
+      description: "Audio upload coming soon!",
+    });
+  };
+
+  const handleScan = () => {
+    toast({
+      title: "Scan",
+      description: "Scan functionality coming soon!",
+    });
+  };
+
+  const handleStickyNote = () => {
+    toast({
+      title: "Sticky note",
+      description: "Sticky note feature coming soon!",
+    });
+  };
+
+  const handleAddToCalendar = () => {
+    toast({
+      title: "Add to calendar",
+      description: "Calendar integration coming soon!",
+    });
+  };
+
   if (!noteId) {
     return (
       <div className="flex-1 flex items-center justify-center text-muted-foreground">
@@ -309,8 +398,28 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
   }
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className={`flex-1 flex flex-col ${isMaximized ? 'fixed inset-0 z-50 bg-background' : ''}`}>
       <div className="border-b p-4 space-y-3">
+        <div className="flex items-center justify-between mb-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/dashboard')}
+            title="Back to Home"
+          >
+            <Home className="h-4 w-4" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMaximized(!isMaximized)}
+              title={isMaximized ? "Minimize" : "Maximize"}
+            >
+              {isMaximized ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </Button>
+          </div>
+        </div>
         <div className="flex items-center gap-2">
           <Input
             value={title}
@@ -377,6 +486,49 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
             )}
             Summarize
           </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={handleShare}>
+                <Share2 className="mr-2 h-4 w-4" />
+                Share
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleDuplicate}>
+                <Copy className="mr-2 h-4 w-4" />
+                Duplicate
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleAddTag}>
+                <Tag className="mr-2 h-4 w-4" />
+                Add Tag
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleAddImage}>
+                <Image className="mr-2 h-4 w-4" />
+                Add Image
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleAddAudio}>
+                <AudioLines className="mr-2 h-4 w-4" />
+                Add Audio
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleScan}>
+                <ScanLine className="mr-2 h-4 w-4" />
+                Scan
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleStickyNote}>
+                <StickyNote className="mr-2 h-4 w-4" />
+                Sticky Note
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleAddToCalendar}>
+                <Calendar className="mr-2 h-4 w-4" />
+                Add to Calendar
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button
             variant="outline"
             size="icon"
