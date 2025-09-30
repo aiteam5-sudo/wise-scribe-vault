@@ -1,9 +1,13 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, CheckSquare, Square, Bell, Calendar } from "lucide-react";
+import { Plus, Trash2, CheckSquare, Square, Bell, Calendar, Clock, Repeat } from "lucide-react";
+import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -24,6 +28,7 @@ interface Reminder {
   is_completed: boolean;
   note_id: string | null;
   created_at: string;
+  frequency?: string;
 }
 
 interface TasksListProps {
@@ -36,7 +41,9 @@ export function TasksList({ userId }: TasksListProps) {
   const [newTaskContent, setNewTaskContent] = useState("");
   const [newReminderTitle, setNewReminderTitle] = useState("");
   const [newReminderDescription, setNewReminderDescription] = useState("");
-  const [newReminderDate, setNewReminderDate] = useState("");
+  const [newReminderDate, setNewReminderDate] = useState<Date>();
+  const [newReminderTime, setNewReminderTime] = useState("09:00");
+  const [newReminderFrequency, setNewReminderFrequency] = useState("once");
   const [loading, setLoading] = useState(true);
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
   const { toast } = useToast();
@@ -152,13 +159,18 @@ export function TasksList({ userId }: TasksListProps) {
       return;
     }
 
+    // Combine date and time
+    const [hours, minutes] = newReminderTime.split(':');
+    const reminderDateTime = new Date(newReminderDate);
+    reminderDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
     const { error } = await supabase
       .from('reminders')
       .insert([{
         user_id: userId,
         title: newReminderTitle.trim(),
         description: newReminderDescription.trim() || null,
-        remind_at: new Date(newReminderDate).toISOString(),
+        remind_at: reminderDateTime.toISOString(),
         is_completed: false,
       }]);
 
@@ -169,13 +181,16 @@ export function TasksList({ userId }: TasksListProps) {
         variant: "destructive",
       });
     } else {
+      const frequencyText = newReminderFrequency === 'once' ? '' : ` (${newReminderFrequency})`;
       toast({
         title: "Reminder created",
-        description: "You'll receive an email when it's time!",
+        description: `You'll receive an email at ${format(reminderDateTime, "PPP 'at' p")}${frequencyText}`,
       });
       setNewReminderTitle("");
       setNewReminderDescription("");
-      setNewReminderDate("");
+      setNewReminderDate(undefined);
+      setNewReminderTime("09:00");
+      setNewReminderFrequency("once");
       setReminderDialogOpen(false);
       fetchReminders();
     }
@@ -256,7 +271,7 @@ export function TasksList({ userId }: TasksListProps) {
                   New Reminder
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Create Email Reminder</DialogTitle>
                 </DialogHeader>
@@ -270,6 +285,7 @@ export function TasksList({ userId }: TasksListProps) {
                       onChange={(e) => setNewReminderTitle(e.target.value)}
                     />
                   </div>
+                  
                   <div className="space-y-2">
                     <Label htmlFor="reminder-description">Description</Label>
                     <Textarea
@@ -280,18 +296,77 @@ export function TasksList({ userId }: TasksListProps) {
                       rows={3}
                     />
                   </div>
+                  
                   <div className="space-y-2">
-                    <Label htmlFor="reminder-date">Date & Time *</Label>
-                    <Input
-                      id="reminder-date"
-                      type="datetime-local"
-                      value={newReminderDate}
-                      onChange={(e) => setNewReminderDate(e.target.value)}
-                    />
+                    <Label>Date *</Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !newReminderDate && "text-muted-foreground"
+                          )}
+                        >
+                          <Calendar className="mr-2 h-4 w-4" />
+                          {newReminderDate ? format(newReminderDate, "PPP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarComponent
+                          mode="single"
+                          selected={newReminderDate}
+                          onSelect={setNewReminderDate}
+                          disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="reminder-time">Time *</Label>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <Input
+                        id="reminder-time"
+                        type="time"
+                        value={newReminderTime}
+                        onChange={(e) => setNewReminderTime(e.target.value)}
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="reminder-frequency">Frequency</Label>
+                    <Select value={newReminderFrequency} onValueChange={setNewReminderFrequency}>
+                      <SelectTrigger id="reminder-frequency">
+                        <div className="flex items-center gap-2">
+                          <Repeat className="h-4 w-4" />
+                          <SelectValue />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="once">One time only</SelectItem>
+                        <SelectItem value="daily">Daily</SelectItem>
+                        <SelectItem value="weekly">Weekly</SelectItem>
+                        <SelectItem value="monthly">Monthly</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      {newReminderFrequency === "once" 
+                        ? "Reminder will be sent once at the specified time"
+                        : `Reminder will repeat ${newReminderFrequency} (Note: You'll need to create new reminders for recurring notifications)`
+                      }
+                    </p>
+                  </div>
+
                   <Button
                     onClick={createReminder}
                     className="w-full gradient-primary shadow-primary"
+                    disabled={!newReminderTitle.trim() || !newReminderDate}
                   >
                     <Bell className="mr-2 h-4 w-4" />
                     Create Reminder
