@@ -114,7 +114,7 @@ function SortableNoteItem({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-2">
-            <h3 className="font-semibold text-base truncate flex-1">
+            <h3 className="font-semibold text-base truncate flex-1 text-foreground">
               {note.title}
             </h3>
             <div className="flex items-center gap-1 shrink-0">

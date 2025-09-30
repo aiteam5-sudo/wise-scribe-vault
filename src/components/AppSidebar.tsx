@@ -171,22 +171,23 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
     <Sidebar className="border-r glass-effect">
       <SidebarContent>
         {/* Logo and Gmail Section */}
-        <div className="p-4 border-b border-border/50">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
-              <Brain className="h-6 w-6 text-primary-foreground" />
+        <div className="p-4 border-b border-border/50 bg-card">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
+              <Brain className="h-7 w-7 text-white" />
             </div>
-            <div className="flex-1">
-              <h2 className="text-lg font-bold gradient-primary bg-clip-text text-transparent">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg font-bold text-foreground">
                 NoteWise AI
               </h2>
+              <p className="text-xs text-muted-foreground">Smart Notes</p>
             </div>
             <a 
               href={`mailto:${user.email}`}
-              className="p-2 rounded-lg hover:bg-primary/10 transition-smooth"
+              className="p-2 rounded-lg hover:bg-primary/10 transition-smooth shrink-0"
               title="Contact via Gmail"
             >
-              <Mail className="h-5 w-5 text-muted-foreground hover:text-primary" />
+              <Mail className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors" />
             </a>
           </div>
         </div>

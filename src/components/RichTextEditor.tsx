@@ -82,7 +82,7 @@ export const RichTextEditor = ({
         contentEditable
         onInput={handleInput}
         onPaste={handlePaste}
-        className="min-h-[400px] p-4 focus:outline-none prose prose-sm max-w-none"
+        className="min-h-[400px] p-4 focus:outline-none prose prose-sm max-w-none text-foreground prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-li:text-foreground"
         data-placeholder={placeholder}
         suppressContentEditableWarning
       />

@@ -22,7 +22,7 @@ const Index = () => {
               <Brain className="h-20 w-20 text-primary relative z-10" />
             </div>
           </div>
-          <h1 className="text-7xl font-bold tracking-tight glow-text bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] animate-[shimmer_3s_linear_infinite]">
+          <h1 className="text-7xl font-bold tracking-tight text-foreground">
             NoteWise AI
           </h1>
           <p className="text-2xl text-foreground/80 max-w-3xl mx-auto leading-relaxed">
@@ -37,7 +37,7 @@ const Index = () => {
             <div className="mb-4 p-3 rounded-xl bg-primary/10 w-fit mx-auto group-hover:scale-110 transition-smooth">
               <Mic className="h-10 w-10 text-primary" />
             </div>
-            <h3 className="font-bold text-xl mb-2">Voice Recording</h3>
+            <h3 className="font-bold text-xl mb-2 text-foreground">Voice Recording</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Instant transcription powered by advanced speech recognition. Your voice becomes text in real-time.
             </p>
@@ -47,7 +47,7 @@ const Index = () => {
             <div className="mb-4 p-3 rounded-xl bg-accent/10 w-fit mx-auto group-hover:scale-110 transition-smooth">
               <Sparkles className="h-10 w-10 text-accent" />
             </div>
-            <h3 className="font-bold text-xl mb-2">AI Intelligence</h3>
+            <h3 className="font-bold text-xl mb-2 text-foreground">AI Intelligence</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Automatic summaries, action items extraction, and semantic search. AI that understands context.
             </p>
@@ -57,7 +57,7 @@ const Index = () => {
             <div className="mb-4 p-3 rounded-xl bg-primary/10 w-fit mx-auto group-hover:scale-110 transition-smooth">
               <FolderOpen className="h-10 w-10 text-primary" />
             </div>
-            <h3 className="font-bold text-xl mb-2">Smart Organization</h3>
+            <h3 className="font-bold text-xl mb-2 text-foreground">Smart Organization</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Intelligent folder structure with powerful semantic search. Find anything, instantly.
             </p>
@@ -68,15 +68,15 @@ const Index = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
           <div className="flex items-center gap-3 p-4 rounded-xl glass-effect">
             <Zap className="h-6 w-6 text-primary flex-shrink-0" />
-            <span className="text-sm">Lightning Fast Performance</span>
+            <span className="text-sm text-foreground">Lightning Fast Performance</span>
           </div>
           <div className="flex items-center gap-3 p-4 rounded-xl glass-effect">
             <Shield className="h-6 w-6 text-accent flex-shrink-0" />
-            <span className="text-sm">Secure & Private</span>
+            <span className="text-sm text-foreground">Secure & Private</span>
           </div>
           <div className="flex items-center gap-3 p-4 rounded-xl glass-effect">
             <Brain className="h-6 w-6 text-primary flex-shrink-0" />
-            <span className="text-sm">AI-Powered Insights</span>
+            <span className="text-sm text-foreground">AI-Powered Insights</span>
           </div>
         </div>
 

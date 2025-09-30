@@ -109,7 +109,7 @@ export function TasksList({ userId }: TasksListProps) {
     <div className="flex-1 p-8 overflow-y-auto">
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold gradient-primary bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-foreground">
             Tasks
           </h1>
           <p className="text-muted-foreground">
@@ -169,7 +169,7 @@ export function TasksList({ userId }: TasksListProps) {
                 </button>
                 <span
                   className={cn(
-                    "flex-1 text-sm",
+                    "flex-1 text-sm text-foreground",
                     task.is_completed && "line-through text-muted-foreground"
                   )}
                 >

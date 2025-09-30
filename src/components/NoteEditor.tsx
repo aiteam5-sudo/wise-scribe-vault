@@ -423,7 +423,7 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Note title..."
-            className="text-2xl font-bold border-none focus-visible:ring-2 focus-visible:ring-primary/50 px-0 flex-1 bg-transparent"
+            className="text-2xl font-bold border-none focus-visible:ring-2 focus-visible:ring-primary/50 px-0 flex-1 bg-transparent text-foreground placeholder:text-muted-foreground"
           />
           <Popover open={showTitlePopover} onOpenChange={setShowTitlePopover}>
             <PopoverTrigger asChild>
@@ -555,9 +555,9 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
           <Card className="mt-6 p-6 space-y-4 glass-effect tech-border shadow-glow animate-fade-in relative overflow-hidden">
             <div className="absolute inset-0 gradient-glow opacity-50 pointer-events-none" />
             <div className="flex items-center justify-between relative z-10">
-              <h3 className="font-bold flex items-center gap-2 text-lg">
+              <h3 className="font-bold flex items-center gap-2 text-lg text-foreground">
                 <Sparkles className="h-5 w-5 text-primary ai-pulse" />
-                <span className="gradient-primary bg-clip-text text-transparent">AI Summary</span>
+                <span className="text-primary">AI Summary</span>
               </h3>
               <Button
                 variant="outline"
@@ -579,14 +579,14 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
             
             {actionItems.length > 0 && (
               <div>
-                <h3 className="font-semibold mb-2">Action Items</h3>
+                <h3 className="font-semibold mb-2 text-foreground">Action Items</h3>
                 <div className="space-y-2">
                   {actionItems.map((item, index) => (
                     <div key={index} className="flex items-start gap-2">
                       <Badge variant="outline" className="mt-0.5">
                         {index + 1}
                       </Badge>
-                      <p className="text-sm flex-1">{item}</p>
+                      <p className="text-sm flex-1 text-foreground">{item}</p>
                     </div>
                   ))}
                 </div>

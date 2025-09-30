@@ -106,7 +106,7 @@ export const EnhancedSearchView = ({ userId, onNoteSelect }: EnhancedSearchViewP
     <div className="flex-1 p-8 overflow-auto">
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold">Search Notes</h1>
+          <h1 className="text-3xl font-bold text-foreground">Search Notes</h1>
           <div className="relative">
             <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
             <Input

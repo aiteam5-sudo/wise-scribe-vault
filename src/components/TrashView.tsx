@@ -102,7 +102,7 @@ export function TrashView({ userId }: TrashViewProps) {
     <div className="flex-1 p-8 overflow-y-auto">
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold gradient-primary bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-foreground">
             Trash
           </h1>
           <p className="text-muted-foreground">
@@ -128,7 +128,7 @@ export function TrashView({ userId }: TrashViewProps) {
               >
                 <div className="flex items-start justify-between gap-4 mb-2">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-lg mb-1 truncate">
+                    <h3 className="font-semibold text-lg mb-1 truncate text-foreground">
                       {note.title}
                     </h3>
                     <p className="text-sm text-muted-foreground line-clamp-2">
