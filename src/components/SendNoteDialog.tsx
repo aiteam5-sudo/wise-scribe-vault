@@ -41,7 +41,7 @@ export function SendNoteDialog({ open, onOpenChange, noteTitle, noteContent }: S
     
     setIsSending(true);
     try {
-      const { error } = await supabase.functions.invoke("send-note-email", {
+      const { data, error } = await supabase.functions.invoke("send-note-email", {
         body: {
           recipients: emailList,
           noteTitle,
@@ -50,7 +50,16 @@ export function SendNoteDialog({ open, onOpenChange, noteTitle, noteContent }: S
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Parse the error response properly
+        const errorMessage = error.message || error.toString();
+        throw new Error(errorMessage);
+      }
+      
+      // Check if the response contains an error
+      if (data && data.error) {
+        throw new Error(data.error);
+      }
 
       toast({
         title: "Email sent",
@@ -61,15 +70,26 @@ export function SendNoteDialog({ open, onOpenChange, noteTitle, noteContent }: S
       setMessage("");
       onOpenChange(false);
     } catch (error: any) {
-      const errorMessage = error.message || "An unexpected error occurred";
-      const isDomainVerificationError = errorMessage.includes("verify your domain") || errorMessage.includes("verify a domain");
+      console.error("Email sending error:", error);
+      
+      let errorMessage = "An unexpected error occurred while sending the email";
+      
+      // Try to extract error message from various possible error structures
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      const isDomainVerificationError = errorMessage.includes("verify your domain") || errorMessage.includes("verify a domain") || errorMessage.includes("test mode");
       
       toast({
         title: "Failed to send email",
         description: isDomainVerificationError 
-          ? "Please verify your domain at resend.com/domains to send emails to any recipient."
+          ? "⚠️ Email is in test mode. Visit resend.com/domains to verify your domain and send to any recipient."
           : errorMessage,
         variant: "destructive",
+        duration: 6000,
       });
     } finally {
       setIsSending(false);

@@ -45,15 +45,24 @@ serve(async (req) => {
   } catch (error: any) {
     console.error("Error sending email:", error);
     
-    let errorMessage = error.message;
-    if (error.statusCode === 403 && error.message?.includes("verify a domain")) {
-      errorMessage = "Email sending is in test mode. Please verify your domain at resend.com/domains to send emails to any recipient. Currently, emails can only be sent to your verified email address.";
+    // Extract the actual error message from Resend error object
+    let errorMessage = "Failed to send email";
+    
+    if (error.message) {
+      errorMessage = error.message;
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    }
+    
+    // Special handling for Resend domain verification errors
+    if (errorMessage.includes("verify a domain") || errorMessage.includes("verify your domain")) {
+      errorMessage = "Email sending is in test mode. Please verify your domain at resend.com/domains to send emails to any recipient.";
     }
     
     return new Response(
       JSON.stringify({ error: errorMessage }),
       {
-        status: error.statusCode || 500,
+        status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
