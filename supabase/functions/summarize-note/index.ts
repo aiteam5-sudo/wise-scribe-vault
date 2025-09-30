@@ -35,11 +35,29 @@ serve(async (req) => {
         messages: [
           { 
             role: 'system', 
-            content: 'You are a helpful assistant that creates concise, point-wise summaries and extracts action items from notes. Format summaries as clear bullet points.' 
+            content: 'You are an expert note summarizer. Create detailed, easy-to-understand point-wise summaries that capture all key information. Use simple language and clear bullet points. Be thorough and comprehensive.' 
           },
           { 
             role: 'user', 
-            content: `Please analyze this note and provide:\n1. A point-wise summary with key insights as bullet points\n2. A list of action items (if any)\n\nNote content:\n${content}\n\nFormat your response as JSON with "summary" (string with bullet points using • symbol) and "actionItems" (array of strings) fields.` 
+            content: `Please analyze this note and provide:
+
+1. A detailed point-wise summary covering ALL key information:
+   - Break down the content into clear, specific bullet points
+   - Use simple, easy-to-understand language
+   - Include important details, facts, and insights
+   - Make each point comprehensive but concise
+   - Use the • symbol for bullet points
+
+2. Extract any action items (if present)
+
+Note content:
+${content}
+
+Format your response as JSON with:
+- "summary": A string containing detailed bullet points (use • for bullets, \\n for line breaks)
+- "actionItems": An array of action item strings
+
+Make the summary detailed enough that someone can understand the full content just by reading the points.` 
           }
         ],
       }),
