@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Mic, MicOff, Sparkles, Loader2, Trash2, Replace, Wand2, MoreVertical, Share2, Copy, Image, AudioLines, StickyNote, Minimize2, Maximize2, FileDown, Mail, MessageCircle, Video, X, Upload } from "lucide-react";
+import { Mic, MicOff, Sparkles, Loader2, Trash2, Replace, Wand2, MoreVertical, Share2, Copy, Image, AudioLines, StickyNote, Minimize2, Maximize2, FileDown, MessageCircle, Video, X, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -9,9 +9,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { RealtimeTranscription } from "@/utils/RealtimeTranscription";
 import { RichTextEditor } from "./RichTextEditor";
-import { SendNoteDialog } from "./SendNoteDialog";
 import { cn } from "@/lib/utils";
-import { exportNoteToPDF, shareViaEmail, shareViaWhatsApp, shareViaWhatsAppPDF } from "@/utils/pdfExport";
+import { exportNoteToPDF, shareViaWhatsApp } from "@/utils/pdfExport";
 import {
   Popover,
   PopoverContent,
@@ -46,7 +45,6 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
   const [videoFiles, setVideoFiles] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [showEmailDialog, setShowEmailDialog] = useState(false);
   const audioInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -377,19 +375,6 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
     }
   };
 
-  const handleShareEmail = () => {
-    if (!content.trim()) {
-      toast({
-        title: "No content to share",
-        description: "Please add some content to your note first.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setShowEmailDialog(true);
-  };
-
   const handleShareWhatsApp = () => {
     if (!content.trim()) {
       toast({
@@ -426,7 +411,7 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
     }
 
     try {
-      shareViaWhatsAppPDF(title || 'Untitled Note', content);
+      shareViaWhatsApp(title || 'Untitled Note', content);
     } catch (error: any) {
       toast({
         title: "Share failed",
@@ -634,12 +619,6 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
     return (
       <div className="flex-1 flex items-center justify-center text-muted-foreground">
         <p>Select a note or create a new one to get started</p>
-        <SendNoteDialog
-          open={showEmailDialog}
-          onOpenChange={setShowEmailDialog}
-          noteTitle={title || 'Untitled Note'}
-          noteContent={content}
-        />
       </div>
     );
   }
@@ -742,10 +721,6 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
               <DropdownMenuItem onClick={handleExportPDF}>
                 <FileDown className="mr-2 h-4 w-4" />
                 Export as PDF
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleShareEmail}>
-                <Mail className="mr-2 h-4 w-4" />
-                Share via Email
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleShareWhatsApp}>
                 <MessageCircle className="mr-2 h-4 w-4" />
@@ -936,13 +911,6 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
           </Card>
         )}
       </div>
-      
-      <SendNoteDialog
-        open={showEmailDialog}
-        onOpenChange={setShowEmailDialog}
-        noteTitle={title || 'Untitled Note'}
-        noteContent={content}
-      />
     </div>
   );
 }
