@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { RealtimeTranscription } from "@/utils/RealtimeTranscription";
 import { RichTextEditor } from "./RichTextEditor";
+import { cn } from "@/lib/utils";
 import {
   Popover,
   PopoverContent,
@@ -409,13 +410,14 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
 
   return (
     <div className={`flex-1 flex flex-col ${isMaximized ? 'fixed inset-0 z-50 bg-background' : ''}`}>
-      <div className="border-b p-4 space-y-3">
+      <div className="border-b p-4 space-y-3 bg-gradient-to-r from-card to-muted/30 shadow-md">
         <div className="flex items-center justify-between mb-2">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate('/dashboard')}
             title="Back to Home"
+            className="hover:bg-primary/10 hover:text-primary transition-smooth"
           >
             <Home className="h-4 w-4" />
           </Button>
@@ -425,6 +427,7 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
               size="icon"
               onClick={() => setIsMaximized(!isMaximized)}
               title={isMaximized ? "Minimize" : "Maximize"}
+              className="hover:bg-primary/10 hover:text-primary transition-smooth"
             >
               {isMaximized ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
             </Button>
@@ -481,6 +484,10 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
             variant={isRecording ? "destructive" : "outline"}
             size="icon"
             onClick={isRecording ? stopRecording : startRecording}
+            className={cn(
+              "transition-smooth",
+              isRecording && "animate-glow shadow-destructive"
+            )}
           >
             {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
           </Button>
@@ -488,6 +495,7 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
             variant="outline"
             onClick={handleSummarize}
             disabled={isSummarizing || !content.trim()}
+            className="gradient-primary text-primary-foreground border-0 shadow-primary hover:shadow-glow transition-smooth"
           >
             {isSummarizing ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -558,16 +566,17 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
         />
 
         {(summary || actionItems.length > 0) && (
-          <Card className="mt-6 p-4 space-y-4 bg-accent/50">
+          <Card className="mt-6 p-6 space-y-4 bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20 shadow-primary animate-fade-in">
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" />
+              <h3 className="font-semibold flex items-center gap-2 text-lg">
+                <Sparkles className="h-5 w-5 text-primary animate-glow" />
                 AI Summary
               </h3>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleReplaceWithSummary}
+                className="hover:bg-primary hover:text-primary-foreground transition-smooth shadow-md"
               >
                 <Replace className="mr-2 h-4 w-4" />
                 Replace Note
