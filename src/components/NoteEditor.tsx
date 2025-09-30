@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Mic, MicOff, Sparkles, Loader2, Trash2, Replace, Wand2, MoreVertical, Share2, Copy, Image, AudioLines, StickyNote, Calendar, Minimize2, Maximize2, FileDown, Mail, MessageCircle, Video, X, Upload } from "lucide-react";
+import { Mic, MicOff, Sparkles, Loader2, Trash2, Replace, Wand2, MoreVertical, Share2, Copy, Image, AudioLines, StickyNote, Minimize2, Maximize2, FileDown, Mail, MessageCircle, Video, X, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -629,10 +629,6 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
     // The sticky notes view will be accessible from the sidebar
   };
 
-  const handleAddToCalendar = () => {
-    navigate('/dashboard');
-    // Calendar view is in the tasks section
-  };
 
   if (!noteId) {
     return (
@@ -777,11 +773,6 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
                 <StickyNote className="mr-2 h-4 w-4" />
                 Sticky Note
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleAddToCalendar}>
-                <Calendar className="mr-2 h-4 w-4" />
-                Add to Calendar
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <Button
@@ -796,6 +787,13 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
 
       <div className="flex-1 overflow-y-auto p-4">
         <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+          className="hidden"
+        />
+        <input
           ref={audioInputRef}
           type="file"
           accept="audio/*"
@@ -809,6 +807,36 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
           onChange={handleVideoUpload}
           className="hidden"
         />
+
+        {imageFiles.length > 0 && (
+          <Card className="mb-4 p-4 space-y-3 glass-effect border-border/50">
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                <Image className="h-4 w-4 text-primary" />
+                Images
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                {imageFiles.map((url, index) => (
+                  <div key={index} className="relative group">
+                    <img 
+                      src={url} 
+                      alt={`Upload ${index + 1}`}
+                      className="w-full h-24 object-cover rounded-lg border border-border/50"
+                    />
+                    <Button
+                      variant="destructive"
+                      size="icon"
+                      onClick={() => handleRemoveImage(url)}
+                      className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
+        )}
 
         {(audioFiles.length > 0 || videoFiles.length > 0) && (
           <Card className="mb-4 p-4 space-y-3 glass-effect border-border/50">
