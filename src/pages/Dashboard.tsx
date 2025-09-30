@@ -21,7 +21,10 @@ const Dashboard = () => {
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [isDark, setIsDark] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem("darkMode") === "true" || document.documentElement.classList.contains("dark");
+      const stored = localStorage.getItem("darkMode");
+      // Default to light mode if not set
+      if (stored === null) return false;
+      return stored === "true";
     }
     return false;
   });
@@ -48,10 +51,13 @@ const Dashboard = () => {
     });
 
     // Initialize dark mode on mount
-    const darkMode = localStorage.getItem("darkMode") === "true";
-    if (darkMode && !document.documentElement.classList.contains("dark")) {
+    const storedDarkMode = localStorage.getItem("darkMode");
+    const darkMode = storedDarkMode === "true";
+    setIsDark(darkMode);
+    
+    if (darkMode) {
       document.documentElement.classList.add("dark");
-    } else if (!darkMode && document.documentElement.classList.contains("dark")) {
+    } else {
       document.documentElement.classList.remove("dark");
     }
 

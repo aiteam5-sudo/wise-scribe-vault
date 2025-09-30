@@ -28,10 +28,13 @@ const Account = () => {
       }
     });
 
-    const darkMode = localStorage.getItem("darkMode") === "true";
+    const storedDarkMode = localStorage.getItem("darkMode");
+    const darkMode = storedDarkMode === "true";
     setIsDark(darkMode);
     if (darkMode) {
       document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
     }
   }, [navigate]);
 
