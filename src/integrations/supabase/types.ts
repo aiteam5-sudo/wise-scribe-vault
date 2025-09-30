@@ -91,6 +91,7 @@ export type Database = {
           folder_id: string | null
           id: string
           is_favorite: boolean | null
+          position: number | null
           summary: string | null
           title: string
           updated_at: string
@@ -104,6 +105,7 @@ export type Database = {
           folder_id?: string | null
           id?: string
           is_favorite?: boolean | null
+          position?: number | null
           summary?: string | null
           title?: string
           updated_at?: string
@@ -117,6 +119,7 @@ export type Database = {
           folder_id?: string | null
           id?: string
           is_favorite?: boolean | null
+          position?: number | null
           summary?: string | null
           title?: string
           updated_at?: string

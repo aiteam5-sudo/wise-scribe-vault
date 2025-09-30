@@ -1,9 +1,26 @@
 import { useState, useEffect } from "react";
-import { Plus, FileText, Trash2, MoreVertical, Share2, Palette, FolderInput } from "lucide-react";
+import { Plus, FileText, Trash2, MoreVertical, Share2, Palette, FolderInput, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,6 +45,7 @@ interface Note {
   content: string;
   created_at: string;
   updated_at: string;
+  position: number;
 }
 
 interface NotesListProps {
@@ -37,12 +55,145 @@ interface NotesListProps {
   folderId: string | null;
 }
 
+interface SortableNoteItemProps {
+  note: Note;
+  selectedNoteId: string | null;
+  onNoteSelect: (noteId: string) => void;
+  onDeleteNote: (note: Note) => void;
+  formatDate: (dateString: string) => string;
+  getPreview: (content: string) => string;
+}
+
+function SortableNoteItem({ 
+  note, 
+  selectedNoteId, 
+  onNoteSelect, 
+  onDeleteNote,
+  formatDate,
+  getPreview 
+}: SortableNoteItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: note.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const { toast } = useToast();
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      style={style}
+      className={cn(
+        "relative group",
+        isDragging && "z-50"
+      )}
+    >
+      <button
+        onClick={() => onNoteSelect(note.id)}
+        className={cn(
+          "w-full text-left p-4 border-b hover:bg-primary/10 transition-smooth hover:shadow-md backdrop-blur-sm flex items-center gap-2",
+          selectedNoteId === note.id && "bg-gradient-to-r from-primary/20 to-accent/20 border-l-4 border-l-primary shadow-glow tech-border"
+        )}
+      >
+        <div
+          {...attributes}
+          {...listeners}
+          className="cursor-grab active:cursor-grabbing shrink-0 text-muted-foreground hover:text-foreground transition-colors p-1"
+        >
+          <GripVertical className="h-5 w-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <h3 className="font-semibold text-base truncate flex-1">
+              {note.title}
+            </h3>
+            <div className="flex items-center gap-1 shrink-0">
+              <p className="text-xs text-muted-foreground">
+                {formatDate(note.updated_at)}
+              </p>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenuItem onClick={() => {
+                    toast({
+                      title: "Share feature",
+                      description: "Share functionality coming soon!",
+                    });
+                  }}>
+                    <Share2 className="mr-2 h-4 w-4" />
+                    Share
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => onDeleteNote(note)}
+                    className="text-destructive"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => {
+                    toast({
+                      title: "Color code",
+                      description: "Color coding coming soon!",
+                    });
+                  }}>
+                    <Palette className="mr-2 h-4 w-4" />
+                    Color Code
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => {
+                    toast({
+                      title: "Move note",
+                      description: "Move to folder coming soon!",
+                    });
+                  }}>
+                    <FolderInput className="mr-2 h-4 w-4" />
+                    Move
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground line-clamp-2">
+            {getPreview(note.content)}
+          </p>
+        </div>
+      </button>
+    </div>
+  );
+}
+
 export function NotesList({ userId, selectedNoteId, onNoteSelect, folderId }: NotesListProps) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingNote, setDeletingNote] = useState<Note | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     fetchNotes();
@@ -68,7 +219,7 @@ export function NotesList({ userId, selectedNoteId, onNoteSelect, folderId }: No
       .from('notes')
       .select('*')
       .eq('user_id', userId)
-      .order('updated_at', { ascending: false });
+      .order('position', { ascending: true });
 
     if (folderId) {
       query = query.eq('folder_id', folderId);
@@ -89,6 +240,9 @@ export function NotesList({ userId, selectedNoteId, onNoteSelect, folderId }: No
   };
 
   const createNewNote = async () => {
+    // Find the highest position
+    const maxPosition = notes.length > 0 ? Math.max(...notes.map(n => n.position)) : 0;
+    
     const { data, error } = await supabase
       .from('notes')
       .insert([{
@@ -96,6 +250,7 @@ export function NotesList({ userId, selectedNoteId, onNoteSelect, folderId }: No
         title: 'Untitled Note',
         content: '',
         folder_id: folderId,
+        position: maxPosition + 1,
       }])
       .select()
       .single();
@@ -109,6 +264,50 @@ export function NotesList({ userId, selectedNoteId, onNoteSelect, folderId }: No
     } else if (data) {
       fetchNotes();
       onNoteSelect(data.id);
+    }
+  };
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) {
+      return;
+    }
+
+    const oldIndex = notes.findIndex((note) => note.id === active.id);
+    const newIndex = notes.findIndex((note) => note.id === over.id);
+
+    const reorderedNotes = arrayMove(notes, oldIndex, newIndex);
+    
+    // Update local state immediately for smooth UX
+    setNotes(reorderedNotes);
+
+    // Update positions in database
+    try {
+      const updates = reorderedNotes.map((note, index) => ({
+        id: note.id,
+        position: index,
+      }));
+
+      for (const update of updates) {
+        await supabase
+          .from('notes')
+          .update({ position: update.position })
+          .eq('id', update.id);
+      }
+
+      toast({
+        title: "Notes reordered",
+        description: "Your notes have been rearranged successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error reordering notes",
+        description: error.message,
+        variant: "destructive",
+      });
+      // Revert on error
+      fetchNotes();
     }
   };
 
@@ -183,83 +382,31 @@ export function NotesList({ userId, selectedNoteId, onNoteSelect, folderId }: No
             <p className="text-sm text-muted-foreground">No notes yet</p>
           </div>
         ) : (
-          notes.map((note) => (
-            <div key={note.id} className="relative group">
-              <button
-                onClick={() => onNoteSelect(note.id)}
-                className={cn(
-                  "w-full text-left p-4 border-b hover:bg-primary/10 transition-smooth hover:shadow-md backdrop-blur-sm",
-                  selectedNoteId === note.id && "bg-gradient-to-r from-primary/20 to-accent/20 border-l-4 border-l-primary shadow-glow tech-border"
-                )}
-              >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <h3 className="font-semibold text-base truncate flex-1">
-                    {note.title}
-                  </h3>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <p className="text-xs text-muted-foreground">
-                      {formatDate(note.updated_at)}
-                    </p>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenuItem onClick={() => {
-                          toast({
-                            title: "Share feature",
-                            description: "Share functionality coming soon!",
-                          });
-                        }}>
-                          <Share2 className="mr-2 h-4 w-4" />
-                          Share
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setDeletingNote(note);
-                            setDeleteDialogOpen(true);
-                          }}
-                          className="text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => {
-                          toast({
-                            title: "Color code",
-                            description: "Color coding coming soon!",
-                          });
-                        }}>
-                          <Palette className="mr-2 h-4 w-4" />
-                          Color Code
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => {
-                          toast({
-                            title: "Move note",
-                            description: "Move to folder coming soon!",
-                          });
-                        }}>
-                          <FolderInput className="mr-2 h-4 w-4" />
-                          Move
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {getPreview(note.content)}
-                </p>
-              </button>
-            </div>
-          ))
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={notes.map(note => note.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {notes.map((note) => (
+                <SortableNoteItem
+                  key={note.id}
+                  note={note}
+                  selectedNoteId={selectedNoteId}
+                  onNoteSelect={onNoteSelect}
+                  onDeleteNote={(note) => {
+                    setDeletingNote(note);
+                    setDeleteDialogOpen(true);
+                  }}
+                  formatDate={formatDate}
+                  getPreview={getPreview}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
         )}
       </div>
 
