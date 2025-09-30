@@ -43,9 +43,11 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
   const [isMaximized, setIsMaximized] = useState(false);
   const [audioFiles, setAudioFiles] = useState<string[]>([]);
   const [videoFiles, setVideoFiles] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const audioInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
   const realtimeRef = useRef<RealtimeTranscription | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -443,10 +445,71 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
   };
 
   const handleAddImage = () => {
-    toast({
-      title: "Add image",
-      description: "Image upload coming soon!",
-    });
+    imageInputRef.current?.click();
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !noteId) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid file",
+        description: "Please select an image file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `${userId}/${fileName}`;
+
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from('note-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('note-images')
+        .getPublicUrl(filePath);
+
+      const imageFiles = [...(currentNote?.image_files || []), publicUrl];
+      await supabase
+        .from('notes')
+        .update({ image_files: imageFiles })
+        .eq('id', noteId);
+
+      fetchNote();
+      toast({
+        title: "Image uploaded",
+        description: "Image has been added to your note.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Upload failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+      if (event.target) event.target.value = '';
+    }
+  };
+
+  const handleRemoveImage = async (imageUrl: string) => {
+    if (!noteId) return;
+    
+    const newImageFiles = (currentNote?.image_files || []).filter(url => url !== imageUrl);
+    setImageFiles(newImageFiles);
+
+    await supabase
+      .from('notes')
+      .update({ image_files: newImageFiles })
+      .eq('id', noteId);
   };
 
   const handleAddAudio = () => {
@@ -706,9 +769,9 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
                 Duplicate
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleAddImage}>
+              <DropdownMenuItem onClick={handleAddImage} disabled={isUploading}>
                 <Image className="mr-2 h-4 w-4" />
-                Add Image
+                {isUploading ? "Uploading..." : "Add Image"}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleAddAudio} disabled={isUploading}>
                 <AudioLines className="mr-2 h-4 w-4" />
