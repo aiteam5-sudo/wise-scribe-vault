@@ -35,11 +35,11 @@ serve(async (req) => {
         messages: [
           { 
             role: 'system', 
-            content: 'You are a helpful assistant that creates concise summaries and extracts action items from notes. Provide a brief summary (2-3 sentences) and a list of action items if any exist.' 
+            content: 'You are a helpful assistant that creates concise, point-wise summaries and extracts action items from notes. Format summaries as clear bullet points.' 
           },
           { 
             role: 'user', 
-            content: `Please analyze this note and provide:\n1. A brief summary (2-3 sentences)\n2. A list of action items (if any)\n\nNote content:\n${content}\n\nFormat your response as JSON with "summary" and "actionItems" (array of strings) fields.` 
+            content: `Please analyze this note and provide:\n1. A point-wise summary with key insights as bullet points\n2. A list of action items (if any)\n\nNote content:\n${content}\n\nFormat your response as JSON with "summary" (string with bullet points using • symbol) and "actionItems" (array of strings) fields.` 
           }
         ],
       }),

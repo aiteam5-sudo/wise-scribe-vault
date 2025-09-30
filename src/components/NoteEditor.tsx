@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Mic, MicOff, Sparkles, Loader2, Trash2 } from "lucide-react";
+import { Mic, MicOff, Sparkles, Loader2, Trash2, Replace } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -221,6 +221,26 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
     }
   };
 
+  const handleReplaceWithSummary = async () => {
+    if (!summary) return;
+
+    const newContent = summary + (actionItems.length > 0 ? '\n\n' + actionItems.map((item, i) => `${i + 1}. ${item}`).join('\n') : '');
+    setContent(newContent);
+    
+    // Save the updated content
+    if (noteId) {
+      await supabase
+        .from('notes')
+        .update({ content: newContent })
+        .eq('id', noteId);
+    }
+
+    toast({
+      title: "Note replaced",
+      description: "Your note has been replaced with the AI summary.",
+    });
+  };
+
   if (!noteId) {
     return (
       <div className="flex-1 flex items-center justify-center text-muted-foreground">
@@ -278,13 +298,24 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
 
         {(summary || actionItems.length > 0) && (
           <Card className="mt-6 p-4 space-y-4 bg-accent/50">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                AI Summary
+              </h3>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReplaceWithSummary}
+              >
+                <Replace className="mr-2 h-4 w-4" />
+                Replace Note
+              </Button>
+            </div>
+            
             {summary && (
               <div>
-                <h3 className="font-semibold mb-2 flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  AI Summary
-                </h3>
-                <p className="text-sm text-muted-foreground">{summary}</p>
+                <p className="text-sm whitespace-pre-line">{summary}</p>
               </div>
             )}
             
