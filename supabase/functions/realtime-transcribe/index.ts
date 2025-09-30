@@ -34,11 +34,9 @@ Deno.serve(async (req) => {
         const sessionConfig = {
           type: "session.update",
           session: {
-            modalities: ["text", "audio"],
-            instructions: "You are a transcription assistant. Transcribe the user's speech accurately.",
-            voice: "alloy",
+            modalities: ["text"],
+            instructions: "You are a transcription assistant. Transcribe the user's speech accurately. Only transcribe, do not respond.",
             input_audio_format: "pcm16",
-            output_audio_format: "pcm16",
             input_audio_transcription: {
               model: "whisper-1"
             },
@@ -46,19 +44,26 @@ Deno.serve(async (req) => {
               type: "server_vad",
               threshold: 0.5,
               prefix_padding_ms: 300,
-              silence_duration_ms: 500
-            },
-            temperature: 0.8
+              silence_duration_ms: 700
+            }
           }
         };
         openAISocket?.send(JSON.stringify(sessionConfig));
-        console.log("Session configured");
+        console.log("Session configured for transcription");
       }
 
-      // Forward transcription to client
-      if (data.type === 'conversation.item.input_audio_transcription.completed' ||
-          data.type === 'response.audio_transcript.delta' ||
-          data.type === 'conversation.item.input_audio_transcription.delta') {
+      // Log and forward all transcription-related events
+      if (data.type === 'conversation.item.input_audio_transcription.completed') {
+        console.log("Transcription completed:", data.transcript);
+        socket.send(JSON.stringify(data));
+      } else if (data.type === 'conversation.item.input_audio_transcription.delta') {
+        console.log("Transcription delta:", data.delta);
+        socket.send(JSON.stringify(data));
+      } else if (data.type === 'conversation.item.created') {
+        console.log("Conversation item created");
+        socket.send(JSON.stringify(data));
+      } else if (data.type === 'error') {
+        console.error("OpenAI error:", data.error);
         socket.send(JSON.stringify(data));
       }
     };

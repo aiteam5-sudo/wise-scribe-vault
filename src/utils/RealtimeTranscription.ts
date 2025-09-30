@@ -107,17 +107,34 @@ export class RealtimeTranscription {
           const data = JSON.parse(event.data);
           console.log('Received message:', data.type);
 
-          // Handle transcription deltas
+          // Handle transcription completed
           if (data.type === 'conversation.item.input_audio_transcription.completed') {
+            console.log('Transcription completed:', data.transcript);
             if (data.transcript) {
               this.onTranscript(data.transcript);
             }
-          } else if (data.type === 'conversation.item.input_audio_transcription.delta') {
+          } 
+          // Handle transcription deltas (word by word)
+          else if (data.type === 'conversation.item.input_audio_transcription.delta') {
+            console.log('Transcription delta:', data.delta);
             if (data.delta) {
               this.onTranscript(data.delta);
             }
-          } else if (data.type === 'error') {
-            this.onError(data.message || 'Unknown error');
+          }
+          // Handle conversation item with transcription
+          else if (data.type === 'conversation.item.created') {
+            console.log('Conversation item:', data);
+            if (data.item?.content) {
+              const transcriptContent = data.item.content.find((c: any) => c.type === 'input_audio' && c.transcript);
+              if (transcriptContent?.transcript) {
+                this.onTranscript(transcriptContent.transcript);
+              }
+            }
+          }
+          // Handle errors
+          else if (data.type === 'error') {
+            console.error('Transcription error:', data.error);
+            this.onError(data.error?.message || 'Unknown error');
           }
         } catch (error) {
           console.error('Error parsing message:', error);

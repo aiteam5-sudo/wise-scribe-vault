@@ -126,15 +126,19 @@ export function NotesList({ userId, selectedNoteId, onNoteSelect, folderId }: No
               onClick={() => onNoteSelect(note.id)}
               className={cn(
                 "w-full text-left p-4 border-b hover:bg-accent transition-colors",
-                selectedNoteId === note.id && "bg-accent"
+                selectedNoteId === note.id && "bg-accent border-l-4 border-l-primary"
               )}
             >
-              <h3 className="font-medium truncate mb-1">{note.title}</h3>
-              <p className="text-sm text-muted-foreground truncate mb-2">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <h3 className="font-semibold text-base truncate flex-1">
+                  {note.title}
+                </h3>
+                <p className="text-xs text-muted-foreground shrink-0">
+                  {formatDate(note.updated_at)}
+                </p>
+              </div>
+              <p className="text-sm text-muted-foreground line-clamp-2">
                 {getPreview(note.content)}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                {formatDate(note.updated_at)}
               </p>
             </button>
           ))
