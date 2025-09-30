@@ -107,31 +107,37 @@ export class RealtimeTranscription {
           const data = JSON.parse(event.data);
           console.log('Received message:', data.type);
 
-          // Handle transcription completed
+          // Completed full utterance transcript
           if (data.type === 'conversation.item.input_audio_transcription.completed') {
             console.log('Transcription completed:', data.transcript);
             if (data.transcript) {
-              this.onTranscript(data.transcript);
+              this.onTranscript(data.transcript + ' ');
             }
-          } 
-          // Handle transcription deltas (word by word)
+          }
+          // Partial (word/token) deltas direct from input stream
           else if (data.type === 'conversation.item.input_audio_transcription.delta') {
             console.log('Transcription delta:', data.delta);
             if (data.delta) {
               this.onTranscript(data.delta);
             }
           }
-          // Handle conversation item with transcription
+          // Streamed transcript tokens from the response after VAD commit
+          else if (data.type === 'response.audio_transcript.delta') {
+            console.log('Transcript delta (response):', data.delta);
+            if (data.delta) {
+              this.onTranscript(data.delta);
+            }
+          }
+          // Conversation item with transcript attached
           else if (data.type === 'conversation.item.created') {
-            console.log('Conversation item:', data);
             if (data.item?.content) {
               const transcriptContent = data.item.content.find((c: any) => c.type === 'input_audio' && c.transcript);
               if (transcriptContent?.transcript) {
-                this.onTranscript(transcriptContent.transcript);
+                this.onTranscript(transcriptContent.transcript + ' ');
               }
             }
           }
-          // Handle errors
+          // Errors
           else if (data.type === 'error') {
             console.error('Transcription error:', data.error);
             this.onError(data.error?.message || 'Unknown error');

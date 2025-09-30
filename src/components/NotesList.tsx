@@ -27,6 +27,20 @@ export function NotesList({ userId, selectedNoteId, onNoteSelect, folderId }: No
 
   useEffect(() => {
     fetchNotes();
+
+    // Realtime updates: refresh list on any notes change
+    const channel = supabase
+      .channel('notes-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'notes' },
+        () => fetchNotes()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [userId, folderId]);
 
   const fetchNotes = async () => {

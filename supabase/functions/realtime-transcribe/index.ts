@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
               type: "server_vad",
               threshold: 0.5,
               prefix_padding_ms: 300,
-              silence_duration_ms: 700
+              silence_duration_ms: 300
             }
           }
         };
@@ -52,12 +52,15 @@ Deno.serve(async (req) => {
         console.log("Session configured for transcription");
       }
 
-      // Log and forward all transcription-related events
+      // Log and forward transcription-related events, including streaming deltas
       if (data.type === 'conversation.item.input_audio_transcription.completed') {
         console.log("Transcription completed:", data.transcript);
         socket.send(JSON.stringify(data));
       } else if (data.type === 'conversation.item.input_audio_transcription.delta') {
         console.log("Transcription delta:", data.delta);
+        socket.send(JSON.stringify(data));
+      } else if (data.type === 'response.audio_transcript.delta') {
+        console.log("Transcript delta:", data.delta);
         socket.send(JSON.stringify(data));
       } else if (data.type === 'conversation.item.created') {
         console.log("Conversation item created");
