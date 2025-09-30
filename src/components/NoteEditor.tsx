@@ -41,7 +41,6 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
   const [titleSuggestions, setTitleSuggestions] = useState<string[]>([]);
   const [showTitlePopover, setShowTitlePopover] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
   const realtimeRef = useRef<RealtimeTranscription | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -338,7 +337,7 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
     }
   };
 
-  const handleExportPDF = async () => {
+  const handleExportPDF = () => {
     if (!content.trim()) {
       toast({
         title: "No content to export",
@@ -348,32 +347,22 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
       return;
     }
 
-    setIsExporting(true);
     try {
-      const pdfBlob = await exportNoteToPDF(title || 'Untitled Note', content);
-      const url = URL.createObjectURL(pdfBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${title || 'Untitled Note'}.pdf`;
-      link.click();
-      URL.revokeObjectURL(url);
-
+      exportNoteToPDF(title || 'Untitled Note', content);
       toast({
-        title: "PDF exported",
-        description: "Your note has been exported as PDF.",
+        title: "Opening print dialog",
+        description: "Use 'Save as PDF' in the print dialog.",
       });
     } catch (error: any) {
       toast({
         title: "Export failed",
-        description: error.message || "Failed to export PDF.",
+        description: error.message || "Failed to open print dialog.",
         variant: "destructive",
       });
-    } finally {
-      setIsExporting(false);
     }
   };
 
-  const handleShareEmail = async () => {
+  const handleShareEmail = () => {
     if (!content.trim()) {
       toast({
         title: "No content to share",
@@ -383,14 +372,11 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
       return;
     }
 
-    setIsExporting(true);
     try {
-      const pdfBlob = await exportNoteToPDF(title || 'Untitled Note', content);
-      shareViaEmail(title || 'Untitled Note', pdfBlob);
-      
+      shareViaEmail(title || 'Untitled Note', content);
       toast({
         title: "Opening email client",
-        description: "PDF downloaded. Attach it to your email.",
+        description: "Your note content has been prepared for email.",
       });
     } catch (error: any) {
       toast({
@@ -398,8 +384,6 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
         description: error.message || "Failed to prepare email.",
         variant: "destructive",
       });
-    } finally {
-      setIsExporting(false);
     }
   };
 
@@ -582,11 +566,11 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={handleExportPDF} disabled={isExporting}>
+              <DropdownMenuItem onClick={handleExportPDF}>
                 <FileDown className="mr-2 h-4 w-4" />
-                {isExporting ? 'Exporting...' : 'Export as PDF'}
+                Export as PDF
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleShareEmail} disabled={isExporting}>
+              <DropdownMenuItem onClick={handleShareEmail}>
                 <Mail className="mr-2 h-4 w-4" />
                 Share via Email
               </DropdownMenuItem>
