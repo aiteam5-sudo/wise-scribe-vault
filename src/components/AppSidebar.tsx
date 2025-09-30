@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Folder, Search, LogOut, Plus, FolderPlus, MoreVertical, Pencil, Trash2, User as UserIcon, Settings, CheckSquare, FileText, Trash, Mail, Brain, ChevronRight } from "lucide-react";
+import { Folder, Search, LogOut, Plus, FolderPlus, MoreVertical, Pencil, Trash2, User as UserIcon, Settings, CheckSquare, FileText, Trash, Mail, Brain, ChevronRight, StickyNote } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -47,11 +47,13 @@ interface Folder {
 interface AppSidebarProps {
   user: User;
   onSignOut: () => void;
-  onViewChange: (view: 'notes' | 'search' | 'tasks' | 'trash') => void;
+  onViewChange: (view: 'notes' | 'search' | 'tasks' | 'trash' | 'sticky') => void;
   selectedFolderId: string | null;
   onFolderSelect: (folderId: string | null) => void;
-  currentView: 'notes' | 'search' | 'tasks' | 'trash';
+  currentView: 'notes' | 'search' | 'tasks' | 'trash' | 'sticky';
 }
+
+import { autoOrganizeNotes } from "@/utils/autoOrganizer";
 
 export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, onFolderSelect, currentView }: AppSidebarProps) {
   const [folders, setFolders] = useState<Folder[]>([]);
@@ -65,6 +67,7 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [parentFolderForNew, setParentFolderForNew] = useState<string | null>(null);
+  const [isOrganizing, setIsOrganizing] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -275,6 +278,31 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
     }
   };
 
+  const handleOrganize = async () => {
+    setIsOrganizing(true);
+    toast({
+      title: "Organizing notes",
+      description: "AI is analyzing and organizing your notes...",
+    });
+
+    const result = await autoOrganizeNotes(user.id);
+
+    if (result.success) {
+      toast({
+        title: "Organization complete",
+        description: result.message,
+      });
+      fetchFolders();
+    } else {
+      toast({
+        title: "Organization failed",
+        description: result.message,
+        variant: "destructive",
+      });
+    }
+    setIsOrganizing(false);
+  };
+
   return (
     <Sidebar className="border-r glass-effect">
       <SidebarContent>
@@ -324,6 +352,16 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
                 >
                   <CheckSquare className="h-4 w-4" />
                   <span>Tasks</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  onClick={() => onViewChange('sticky')}
+                  isActive={currentView === 'sticky'}
+                  className="transition-smooth hover:bg-primary/10 hover:text-primary"
+                >
+                  <StickyNote className="h-4 w-4" />
+                  <span>Sticky Notes</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
@@ -407,6 +445,25 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
           <SidebarGroupContent>
             <SidebarMenu>
               {getChildFolders(null).map((folder) => renderFolder(folder))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Quick Actions</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={handleOrganize}
+                  disabled={isOrganizing}
+                >
+                  <FolderPlus className="mr-2 h-4 w-4" />
+                  {isOrganizing ? "Organizing..." : "Auto-Organize Notes"}
+                </Button>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

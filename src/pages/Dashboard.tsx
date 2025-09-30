@@ -8,7 +8,8 @@ import { NotesList } from "@/components/NotesList";
 import { EnhancedSearchView } from "@/components/EnhancedSearchView";
 import { TasksList } from "@/components/TasksList";
 import { TrashView } from "@/components/TrashView";
-import { AIChat } from "@/components/AIChat";
+import { StickyNotesBoard } from "@/components/StickyNotesBoard";
+import { EnhancedAIChat } from "@/components/EnhancedAIChat";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Moon, Sun } from "lucide-react";
@@ -17,7 +18,7 @@ import type { User } from "@supabase/supabase-js";
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
-  const [currentView, setCurrentView] = useState<'notes' | 'search' | 'tasks' | 'trash'>('notes');
+  const [currentView, setCurrentView] = useState<'notes' | 'search' | 'tasks' | 'trash' | 'sticky'>('notes');
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [isDark, setIsDark] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -129,6 +130,8 @@ const Dashboard = () => {
             <TasksList userId={user.id} />
           ) : currentView === 'trash' ? (
             <TrashView userId={user.id} />
+          ) : currentView === 'sticky' ? (
+            <StickyNotesBoard userId={user.id} />
           ) : (
             <>
               <NotesList
@@ -146,7 +149,7 @@ const Dashboard = () => {
           )}
           </div>
         </main>
-        <AIChat />
+        <EnhancedAIChat userId={user.id} />
       </div>
     </SidebarProvider>
   );

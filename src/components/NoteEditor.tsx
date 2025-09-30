@@ -78,6 +78,7 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
     setActionItems([]);
     setAudioFiles([]);
     setVideoFiles([]);
+    setImageFiles([]);
   };
 
   const fetchNote = async () => {
@@ -102,6 +103,7 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
       setActionItems(data.action_items || []);
       setAudioFiles(data.audio_files || []);
       setVideoFiles(data.video_files || []);
+      setImageFiles(data.image_files || []);
     }
   };
 
@@ -477,10 +479,12 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
         .from('note-images')
         .getPublicUrl(filePath);
 
-      const imageFiles = [...(currentNote?.image_files || []), publicUrl];
+      const newImageFiles = [...imageFiles, publicUrl];
+      setImageFiles(newImageFiles);
+      
       await supabase
         .from('notes')
-        .update({ image_files: imageFiles })
+        .update({ image_files: newImageFiles })
         .eq('id', noteId);
 
       fetchNote();
@@ -503,7 +507,7 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
   const handleRemoveImage = async (imageUrl: string) => {
     if (!noteId) return;
     
-    const newImageFiles = (currentNote?.image_files || []).filter(url => url !== imageUrl);
+    const newImageFiles = imageFiles.filter(url => url !== imageUrl);
     setImageFiles(newImageFiles);
 
     await supabase

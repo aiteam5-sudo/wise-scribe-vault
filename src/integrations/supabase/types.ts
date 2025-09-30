@@ -103,6 +103,7 @@ export type Database = {
           deleted_at: string | null
           folder_id: string | null
           id: string
+          image_files: string[] | null
           is_favorite: boolean | null
           position: number | null
           summary: string | null
@@ -121,6 +122,7 @@ export type Database = {
           deleted_at?: string | null
           folder_id?: string | null
           id?: string
+          image_files?: string[] | null
           is_favorite?: boolean | null
           position?: number | null
           summary?: string | null
@@ -139,6 +141,7 @@ export type Database = {
           deleted_at?: string | null
           folder_id?: string | null
           id?: string
+          image_files?: string[] | null
           is_favorite?: boolean | null
           position?: number | null
           summary?: string | null
@@ -228,6 +231,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sticky_notes: {
+        Row: {
+          color: string
+          content: string
+          created_at: string
+          id: string
+          position_x: number
+          position_y: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string
+          content?: string
+          created_at?: string
+          id?: string
+          position_x?: number
+          position_y?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          content?: string
+          created_at?: string
+          id?: string
+          position_x?: number
+          position_y?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {

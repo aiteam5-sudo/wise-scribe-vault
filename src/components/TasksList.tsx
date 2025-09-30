@@ -46,6 +46,7 @@ export function TasksList({ userId }: TasksListProps) {
   const [newReminderFrequency, setNewReminderFrequency] = useState("once");
   const [loading, setLoading] = useState(true);
   const [reminderDialogOpen, setReminderDialogOpen] = useState(false);
+  const [isTestingReminder, setIsTestingReminder] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -242,6 +243,40 @@ export function TasksList({ userId }: TasksListProps) {
     });
   };
 
+  const handleTestReminder = async () => {
+    setIsTestingReminder(true);
+    
+    // Create a test reminder 2 minutes in the future
+    const testDate = new Date();
+    testDate.setMinutes(testDate.getMinutes() + 2);
+
+    const { error } = await supabase
+      .from('reminders')
+      .insert([{
+        user_id: userId,
+        title: "Test Reminder",
+        description: "This is a test email reminder from NoteWise. You should receive this email in ~2 minutes.",
+        remind_at: testDate.toISOString(),
+        is_completed: false,
+      }]);
+
+    if (error) {
+      toast({
+        title: "Test failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Test reminder created",
+        description: "You should receive a test email in about 2 minutes. Check your inbox!",
+      });
+      fetchReminders();
+    }
+    
+    setIsTestingReminder(false);
+  };
+
   return (
     <div className="flex-1 p-8 overflow-y-auto">
       <div className="max-w-3xl mx-auto space-y-8">
@@ -261,17 +296,27 @@ export function TasksList({ userId }: TasksListProps) {
               <Bell className="h-5 w-5 text-primary" />
               Email Reminders
             </h2>
-            <Dialog open={reminderDialogOpen} onOpenChange={setReminderDialogOpen}>
-              <DialogTrigger asChild>
-                <Button 
-                  variant="outline"
-                  className="border-primary/30 hover:border-primary hover:bg-primary/5"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Reminder
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-h-[90vh] overflow-y-auto">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleTestReminder}
+                disabled={isTestingReminder}
+                className="border-primary/30 hover:border-primary hover:bg-primary/5"
+              >
+                {isTestingReminder ? "Testing..." : "Test Email"}
+              </Button>
+              <Dialog open={reminderDialogOpen} onOpenChange={setReminderDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="outline"
+                    className="border-primary/30 hover:border-primary hover:bg-primary/5"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Reminder
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Create Email Reminder</DialogTitle>
                 </DialogHeader>
@@ -374,6 +419,7 @@ export function TasksList({ userId }: TasksListProps) {
                 </div>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
 
           {reminders.length === 0 ? (
