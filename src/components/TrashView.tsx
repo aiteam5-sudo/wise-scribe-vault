@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Trash2, RotateCcw, X } from "lucide-react";
+import { Trash2, RotateCcw, X, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { formatDistanceToNow } from "date-fns";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,12 +40,12 @@ export function TrashView({ userId }: TrashViewProps) {
 
   const fetchDeletedNotes = async () => {
     setLoading(true);
-    // For now, we'll show recently deleted notes (you can add a deleted_at column later)
     const { data, error } = await supabase
       .from('notes')
       .select('*')
       .eq('user_id', userId)
-      .order('updated_at', { ascending: false });
+      .not('deleted_at', 'is', null)
+      .order('deleted_at', { ascending: false });
 
     if (error) {
       toast({
@@ -53,19 +54,30 @@ export function TrashView({ userId }: TrashViewProps) {
         variant: "destructive",
       });
     } else {
-      // Mock deleted notes for now - in production you'd have a deleted_at column
-      setDeletedNotes([]);
+      setDeletedNotes(data || []);
     }
     setLoading(false);
   };
 
   const restoreNote = async (noteId: string) => {
-    // Restore functionality - would update deleted_at to null
-    toast({
-      title: "Note restored",
-      description: "The note has been restored successfully.",
-    });
-    fetchDeletedNotes();
+    const { error } = await supabase
+      .from('notes')
+      .update({ deleted_at: null })
+      .eq('id', noteId);
+
+    if (error) {
+      toast({
+        title: "Error restoring note",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Note restored",
+        description: "The note has been restored successfully.",
+      });
+      fetchDeletedNotes();
+    }
   };
 
   const permanentlyDelete = async () => {
@@ -91,6 +103,13 @@ export function TrashView({ userId }: TrashViewProps) {
       setSelectedNoteId(null);
       fetchDeletedNotes();
     }
+  };
+
+  const getDaysUntilDeletion = (deletedAt: string) => {
+    const deletedDate = new Date(deletedAt);
+    const expiryDate = new Date(deletedDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const daysLeft = Math.ceil((expiryDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000));
+    return daysLeft;
   };
 
   const formatDate = (dateString: string) => {
@@ -121,49 +140,64 @@ export function TrashView({ userId }: TrashViewProps) {
           </div>
         ) : (
           <div className="space-y-4">
-            {deletedNotes.map((note) => (
-              <div
-                key={note.id}
-                className="group p-6 rounded-xl glass-effect border border-border/50 hover:border-destructive/30 transition-smooth"
-              >
-                <div className="flex items-start justify-between gap-4 mb-2">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-lg mb-1 truncate text-foreground">
-                      {note.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {note.content.replace(/<[^>]*>/g, '').substring(0, 150)}
-                    </p>
-                  </div>
-                  <div className="flex gap-2 shrink-0">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => restoreNote(note.id)}
-                      className="hover:bg-primary/10 hover:text-primary transition-smooth"
-                    >
-                      <RotateCcw className="h-4 w-4 mr-2" />
-                      Restore
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedNoteId(note.id);
-                        setPermanentDeleteDialog(true);
-                      }}
-                      className="hover:bg-destructive/10 hover:text-destructive transition-smooth"
-                    >
-                      <X className="h-4 w-4 mr-2" />
-                      Delete Forever
-                    </Button>
+            {deletedNotes.map((note) => {
+              const daysLeft = getDaysUntilDeletion(note.deleted_at);
+              return (
+                <div
+                  key={note.id}
+                  className="group p-6 rounded-xl glass-effect border border-border/50 hover:border-destructive/30 transition-smooth"
+                >
+                  <div className="flex items-start justify-between gap-4 mb-3">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-lg mb-1 truncate text-foreground">
+                        {note.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+                        {note.content?.replace(/<[^>]*>/g, '').substring(0, 150) || 'Empty note'}
+                      </p>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          <span>
+                            Deleted {formatDistanceToNow(new Date(note.deleted_at), { addSuffix: true })}
+                          </span>
+                        </div>
+                        <span>•</span>
+                        <span className={cn(
+                          "font-medium",
+                          daysLeft <= 7 && "text-destructive"
+                        )}>
+                          {daysLeft} {daysLeft === 1 ? 'day' : 'days'} until permanent deletion
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => restoreNote(note.id)}
+                        className="hover:bg-primary/10 hover:text-primary transition-smooth"
+                      >
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        Restore
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedNoteId(note.id);
+                          setPermanentDeleteDialog(true);
+                        }}
+                        className="hover:bg-destructive/10 hover:text-destructive transition-smooth"
+                      >
+                        <X className="h-4 w-4 mr-2" />
+                        Delete Forever
+                      </Button>
+                    </div>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Deleted: {formatDate(note.deleted_at)}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

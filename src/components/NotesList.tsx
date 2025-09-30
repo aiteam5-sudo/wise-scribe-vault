@@ -219,6 +219,7 @@ export function NotesList({ userId, selectedNoteId, onNoteSelect, folderId }: No
       .from('notes')
       .select('*')
       .eq('user_id', userId)
+      .is('deleted_at', null)
       .order('position', { ascending: true });
 
     if (folderId) {
@@ -313,19 +314,19 @@ export function NotesList({ userId, selectedNoteId, onNoteSelect, folderId }: No
 
     const { error } = await supabase
       .from('notes')
-      .delete()
+      .update({ deleted_at: new Date().toISOString() })
       .eq('id', deletingNote.id);
 
     if (error) {
       toast({
-        title: "Error deleting note",
+        title: "Error moving note to trash",
         description: error.message,
         variant: "destructive",
       });
     } else {
       toast({
-        title: "Note deleted",
-        description: `"${deletingNote.title}" has been deleted.`,
+        title: "Note moved to trash",
+        description: `"${deletingNote.title}" has been moved to trash.`,
       });
       if (selectedNoteId === deletingNote.id) {
         onNoteSelect(notes[0]?.id || '');
@@ -411,9 +412,9 @@ export function NotesList({ userId, selectedNoteId, onNoteSelect, folderId }: No
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Note</AlertDialogTitle>
+            <AlertDialogTitle>Move to Trash</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{deletingNote?.title}"? This action cannot be undone.
+              Are you sure you want to move "{deletingNote?.title}" to trash? You can restore it within 30 days.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

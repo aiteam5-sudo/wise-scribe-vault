@@ -41,6 +41,7 @@ export function SearchView({ userId, onNoteSelect }: SearchViewProps) {
       .from('notes')
       .select('*')
       .eq('user_id', userId)
+      .is('deleted_at', null)
       .or(`title.ilike.%${searchQuery}%,content.ilike.%${searchQuery}%`)
       .order('updated_at', { ascending: false });
 

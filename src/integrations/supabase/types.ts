@@ -88,6 +88,7 @@ export type Database = {
           audio_url: string | null
           content: string | null
           created_at: string
+          deleted_at: string | null
           folder_id: string | null
           id: string
           is_favorite: boolean | null
@@ -102,6 +103,7 @@ export type Database = {
           audio_url?: string | null
           content?: string | null
           created_at?: string
+          deleted_at?: string | null
           folder_id?: string | null
           id?: string
           is_favorite?: boolean | null
@@ -116,6 +118,7 @@ export type Database = {
           audio_url?: string | null
           content?: string | null
           created_at?: string
+          deleted_at?: string | null
           folder_id?: string | null
           id?: string
           is_favorite?: boolean | null
@@ -211,7 +214,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      delete_old_trashed_notes: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
