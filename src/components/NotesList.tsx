@@ -164,9 +164,9 @@ export function NotesList({ userId, selectedNoteId, onNoteSelect, folderId }: No
   };
 
   return (
-    <div className="w-80 border-r bg-card flex flex-col shadow-premium">
-      <div className="p-4 border-b bg-gradient-to-b from-card to-muted/30">
-        <Button onClick={createNewNote} className="w-full gradient-primary shadow-primary hover:shadow-glow transition-smooth">
+    <div className="w-80 border-r glass-effect flex flex-col shadow-premium">
+      <div className="p-4 border-b bg-gradient-to-b from-card/50 to-muted/20">
+        <Button onClick={createNewNote} className="w-full gradient-primary shadow-glow hover:shadow-primary transition-smooth font-semibold">
           <Plus className="mr-2 h-4 w-4" />
           New Note
         </Button>
@@ -188,8 +188,8 @@ export function NotesList({ userId, selectedNoteId, onNoteSelect, folderId }: No
               <button
                 onClick={() => onNoteSelect(note.id)}
                 className={cn(
-                  "w-full text-left p-4 border-b hover:bg-accent/50 transition-smooth hover:shadow-md",
-                  selectedNoteId === note.id && "bg-gradient-to-r from-primary/10 to-accent/10 border-l-4 border-l-primary shadow-primary"
+                  "w-full text-left p-4 border-b hover:bg-primary/10 transition-smooth hover:shadow-md backdrop-blur-sm",
+                  selectedNoteId === note.id && "bg-gradient-to-r from-primary/20 to-accent/20 border-l-4 border-l-primary shadow-glow tech-border"
                 )}
               >
                 <div className="flex items-start justify-between gap-2 mb-2">

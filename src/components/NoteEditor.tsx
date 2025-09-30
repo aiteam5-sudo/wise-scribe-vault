@@ -410,14 +410,14 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
 
   return (
     <div className={`flex-1 flex flex-col ${isMaximized ? 'fixed inset-0 z-50 bg-background' : ''}`}>
-      <div className="border-b p-4 space-y-3 bg-gradient-to-r from-card to-muted/30 shadow-md">
+      <div className="border-b p-4 space-y-3 glass-effect shadow-lg">
         <div className="flex items-center justify-between mb-2">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate('/dashboard')}
             title="Back to Home"
-            className="hover:bg-primary/10 hover:text-primary transition-smooth"
+            className="hover:bg-primary/20 hover:text-primary transition-smooth hover:shadow-glow"
           >
             <Home className="h-4 w-4" />
           </Button>
@@ -427,7 +427,7 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
               size="icon"
               onClick={() => setIsMaximized(!isMaximized)}
               title={isMaximized ? "Minimize" : "Maximize"}
-              className="hover:bg-primary/10 hover:text-primary transition-smooth"
+              className="hover:bg-primary/20 hover:text-primary transition-smooth hover:shadow-glow"
             >
               {isMaximized ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
             </Button>
@@ -438,7 +438,7 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Note title..."
-            className="text-2xl font-bold border-none focus-visible:ring-0 px-0 flex-1"
+            className="text-2xl font-bold border-none focus-visible:ring-2 focus-visible:ring-primary/50 px-0 flex-1 bg-transparent"
           />
           <Popover open={showTitlePopover} onOpenChange={setShowTitlePopover}>
             <PopoverTrigger asChild>
@@ -485,8 +485,8 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
             size="icon"
             onClick={isRecording ? stopRecording : startRecording}
             className={cn(
-              "transition-smooth",
-              isRecording && "animate-glow shadow-destructive"
+              "transition-smooth hover:shadow-glow",
+              isRecording && "animate-glow shadow-destructive shadow-accent"
             )}
           >
             {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
@@ -495,14 +495,15 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
             variant="outline"
             onClick={handleSummarize}
             disabled={isSummarizing || !content.trim()}
-            className="gradient-primary text-primary-foreground border-0 shadow-primary hover:shadow-glow transition-smooth"
+            className="gradient-primary text-primary-foreground border-0 shadow-glow hover:shadow-primary transition-smooth font-semibold relative overflow-hidden group"
           >
+            <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
             {isSummarizing ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <Sparkles className="mr-2 h-4 w-4" />
+              <Sparkles className="mr-2 h-4 w-4 animate-glow" />
             )}
-            Summarize
+            AI Summarize
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -566,17 +567,18 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
         />
 
         {(summary || actionItems.length > 0) && (
-          <Card className="mt-6 p-6 space-y-4 bg-gradient-to-br from-primary/5 to-accent/5 border-primary/20 shadow-primary animate-fade-in">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold flex items-center gap-2 text-lg">
-                <Sparkles className="h-5 w-5 text-primary animate-glow" />
-                AI Summary
+          <Card className="mt-6 p-6 space-y-4 glass-effect tech-border shadow-glow animate-fade-in relative overflow-hidden">
+            <div className="absolute inset-0 gradient-glow opacity-50 pointer-events-none" />
+            <div className="flex items-center justify-between relative z-10">
+              <h3 className="font-bold flex items-center gap-2 text-lg">
+                <Sparkles className="h-5 w-5 text-primary ai-pulse" />
+                <span className="gradient-primary bg-clip-text text-transparent">AI Summary</span>
               </h3>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleReplaceWithSummary}
-                className="hover:bg-primary hover:text-primary-foreground transition-smooth shadow-md"
+                className="hover:bg-primary hover:text-primary-foreground transition-smooth shadow-md hover:shadow-glow border-primary/30"
               >
                 <Replace className="mr-2 h-4 w-4" />
                 Replace Note
@@ -585,7 +587,7 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
             
             {summary && (
               <div 
-                className="prose prose-sm max-w-none dark:prose-invert"
+                className="prose prose-sm max-w-none dark:prose-invert relative z-10"
                 dangerouslySetInnerHTML={{ __html: summary }} 
               />
             )}

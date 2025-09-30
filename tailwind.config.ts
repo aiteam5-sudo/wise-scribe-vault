@@ -14,16 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        'inter': ['Inter', 'sans-serif'],
-        'roboto': ['Roboto', 'sans-serif'],
-        'opensans': ['Open Sans', 'sans-serif'],
-        'lato': ['Lato', 'sans-serif'],
-        'montserrat': ['Montserrat', 'sans-serif'],
-        'playfair': ['Playfair Display', 'serif'],
-        'merriweather': ['Merriweather', 'serif'],
-        'crimson': ['Crimson Text', 'serif'],
-        'raleway': ['Raleway', 'sans-serif'],
-        'poppins': ['Poppins', 'sans-serif'],
+        'space': ['Space Grotesk', 'sans-serif'],
+        'dm': ['DM Sans', 'sans-serif'],
+        'mono': ['JetBrains Mono', 'monospace'],
       },
       colors: {
         border: "hsl(var(--border))",

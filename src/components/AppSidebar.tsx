@@ -166,12 +166,12 @@ export function AppSidebar({ user, onSignOut, onViewChange, selectedFolderId, on
   };
 
   return (
-    <Sidebar className="border-r">
+    <Sidebar className="border-r glass-effect">
       <SidebarTrigger className="m-4" />
       
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-lg font-semibold">
+          <SidebarGroupLabel className="text-xl font-bold gradient-primary bg-clip-text text-transparent glow-text">
             NoteWise AI
           </SidebarGroupLabel>
         </SidebarGroup>
