@@ -575,9 +575,7 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
             </div>
             
             {summary && (
-              <div>
-                <p className="text-sm whitespace-pre-line">{summary}</p>
-              </div>
+              <div dangerouslySetInnerHTML={{ __html: summary }} />
             )}
             
             {actionItems.length > 0 && (
