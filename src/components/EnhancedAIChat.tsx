@@ -7,6 +7,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import zeelAvatar from "@/assets/zeel-avatar.png";
 
 interface Message {
   role: "user" | "assistant";
@@ -16,14 +18,20 @@ interface Message {
 interface EnhancedAIChatProps {
   userId: string;
   onOrganizeFiles?: () => void;
+  currentNote?: {
+    id: string;
+    title: string;
+    content: string;
+    summary?: string;
+  } | null;
 }
 
-export function EnhancedAIChat({ userId, onOrganizeFiles }: EnhancedAIChatProps) {
+export function EnhancedAIChat({ userId, onOrganizeFiles, currentNote }: EnhancedAIChatProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hi! I'm Zeel, your AI assistant. I can help you create quizzes, generate notes on any topic, organize your files, and answer questions about NoteWise. What would you like to do?",
+      content: "Hi! I'm Zeel, your AI assistant. I can help you create quizzes, generate notes, answer questions about your current note, organize your files, and more. What would you like to do?",
     },
   ]);
   const [input, setInput] = useState("");
@@ -74,6 +82,11 @@ export function EnhancedAIChat({ userId, onOrganizeFiles }: EnhancedAIChatProps)
           message: userMessage,
           history: messages,
           userId: userId,
+          currentNote: currentNote ? {
+            title: currentNote.title,
+            content: currentNote.content,
+            summary: currentNote.summary,
+          } : null,
         },
       });
 
@@ -120,20 +133,26 @@ export function EnhancedAIChat({ userId, onOrganizeFiles }: EnhancedAIChatProps)
   }
 
   return (
-    <Card className="fixed bottom-6 right-6 w-96 h-[600px] shadow-2xl z-50 flex flex-col">
+    <Card className="fixed bottom-6 right-6 w-96 h-[600px] shadow-2xl z-50 flex flex-col border-2 border-primary/20">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-gradient-primary rounded-t-lg">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary-foreground" />
-          <h3 className="font-semibold text-primary-foreground">Zeel AI Assistant</h3>
+      <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-primary to-primary/80 rounded-t-lg">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-9 w-9 border-2 border-white/30">
+            <AvatarImage src={zeelAvatar} alt="Zeel AI" />
+            <AvatarFallback className="bg-white/20 text-white">Z</AvatarFallback>
+          </Avatar>
+          <div>
+            <h3 className="font-semibold text-white text-base">Zeel</h3>
+            <p className="text-xs text-white/80">AI Assistant</p>
+          </div>
         </div>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setIsOpen(false)}
-          className="h-8 w-8 text-primary-foreground hover:bg-white/20"
+          className="h-8 w-8 text-white hover:bg-white/20 hover:text-white"
         >
-          <X className="h-4 w-4" />
+          <X className="h-5 w-5" />
         </Button>
       </div>
 
@@ -160,13 +179,19 @@ export function EnhancedAIChat({ userId, onOrganizeFiles }: EnhancedAIChatProps)
           {messages.map((message, index) => (
             <div
               key={index}
-              className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+              className={`flex gap-2 ${message.role === "user" ? "justify-end" : "justify-start"}`}
             >
+              {message.role === "assistant" && (
+                <Avatar className="h-8 w-8 mt-1 flex-shrink-0">
+                  <AvatarImage src={zeelAvatar} alt="Zeel" />
+                  <AvatarFallback>Z</AvatarFallback>
+                </Avatar>
+              )}
               <div
                 className={`max-w-[80%] rounded-lg p-3 ${
                   message.role === "user"
                     ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
+                    : "bg-muted text-foreground"
                 }`}
               >
                 <p className="text-sm whitespace-pre-wrap">{message.content}</p>

@@ -10,6 +10,7 @@ import { TasksList } from "@/components/TasksList";
 import { TrashView } from "@/components/TrashView";
 import { StickyNotesBoard } from "@/components/StickyNotesBoard";
 import { EnhancedAIChat } from "@/components/EnhancedAIChat";
+import { OnboardingTour } from "@/components/OnboardingTour";
 import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Moon, Sun } from "lucide-react";
@@ -20,6 +21,7 @@ const Dashboard = () => {
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'notes' | 'search' | 'tasks' | 'trash' | 'sticky'>('notes');
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
+  const [currentNote, setCurrentNote] = useState<{id: string; title: string; content: string; summary?: string} | null>(null);
   const [isDark, setIsDark] = useState(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem("darkMode");
@@ -31,6 +33,28 @@ const Dashboard = () => {
   });
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Fetch current note data when selectedNoteId changes
+  useEffect(() => {
+    const fetchCurrentNote = async () => {
+      if (!selectedNoteId) {
+        setCurrentNote(null);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('notes')
+        .select('id, title, content, summary')
+        .eq('id', selectedNoteId)
+        .single();
+
+      if (!error && data) {
+        setCurrentNote(data);
+      }
+    };
+
+    fetchCurrentNote();
+  }, [selectedNoteId]);
 
   useEffect(() => {
     // Check for existing session
@@ -149,7 +173,8 @@ const Dashboard = () => {
           )}
           </div>
         </main>
-        <EnhancedAIChat userId={user.id} />
+        <EnhancedAIChat userId={user.id} currentNote={currentNote} />
+        <OnboardingTour userId={user.id} />
       </div>
     </SidebarProvider>
   );

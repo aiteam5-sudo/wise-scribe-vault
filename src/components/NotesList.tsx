@@ -133,40 +133,12 @@ function SortableNoteItem({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                  <DropdownMenuItem onClick={() => {
-                    toast({
-                      title: "Share feature",
-                      description: "Share functionality coming soon!",
-                    });
-                  }}>
-                    <Share2 className="mr-2 h-4 w-4" />
-                    Share
-                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => onDeleteNote(note)}
                     className="text-destructive"
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
                     Delete
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => {
-                    toast({
-                      title: "Color code",
-                      description: "Color coding coming soon!",
-                    });
-                  }}>
-                    <Palette className="mr-2 h-4 w-4" />
-                    Color Code
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => {
-                    toast({
-                      title: "Move note",
-                      description: "Move to folder coming soon!",
-                    });
-                  }}>
-                    <FolderInput className="mr-2 h-4 w-4" />
-                    Move
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 import { RealtimeTranscription } from "@/utils/RealtimeTranscription";
 import { RichTextEditor } from "./RichTextEditor";
+import { SendNoteDialog } from "./SendNoteDialog";
 import { cn } from "@/lib/utils";
 import { exportNoteToPDF, shareViaEmail, shareViaWhatsApp, shareViaWhatsAppPDF } from "@/utils/pdfExport";
 import {
@@ -45,6 +46,7 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
   const [videoFiles, setVideoFiles] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
   const audioInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -385,19 +387,7 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
       return;
     }
 
-    try {
-      shareViaEmail(title || 'Untitled Note', content);
-      toast({
-        title: "Opening email client",
-        description: "Your note content has been prepared for email.",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Share failed",
-        description: error.message || "Failed to prepare email.",
-        variant: "destructive",
-      });
-    }
+    setShowEmailDialog(true);
   };
 
   const handleShareWhatsApp = () => {
@@ -635,23 +625,25 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
   };
 
   const handleStickyNote = () => {
-    toast({
-      title: "Sticky note",
-      description: "Sticky note feature coming soon!",
-    });
+    navigate('/dashboard');
+    // The sticky notes view will be accessible from the sidebar
   };
 
   const handleAddToCalendar = () => {
-    toast({
-      title: "Add to calendar",
-      description: "Calendar integration coming soon!",
-    });
+    navigate('/dashboard');
+    // Calendar view is in the tasks section
   };
 
   if (!noteId) {
     return (
       <div className="flex-1 flex items-center justify-center text-muted-foreground">
         <p>Select a note or create a new one to get started</p>
+        <SendNoteDialog
+          open={showEmailDialog}
+          onOpenChange={setShowEmailDialog}
+          noteTitle={title || 'Untitled Note'}
+          noteContent={content}
+        />
       </div>
     );
   }
@@ -762,10 +754,6 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
               <DropdownMenuItem onClick={handleShareWhatsApp}>
                 <MessageCircle className="mr-2 h-4 w-4" />
                 Share via WhatsApp
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleShareWhatsAppPDF}>
-                <FileDown className="mr-2 h-4 w-4" />
-                Share PDF via WhatsApp
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleDuplicate}>
@@ -920,6 +908,13 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
           </Card>
         )}
       </div>
+      
+      <SendNoteDialog
+        open={showEmailDialog}
+        onOpenChange={setShowEmailDialog}
+        noteTitle={title || 'Untitled Note'}
+        noteContent={content}
+      />
     </div>
   );
 }

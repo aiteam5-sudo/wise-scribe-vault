@@ -11,27 +11,39 @@ serve(async (req) => {
   }
 
   try {
-    const { message, history } = await req.json();
+    const { message, history, currentNote } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
 
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY not configured");
     }
 
+    let noteContext = "";
+    if (currentNote && currentNote.content) {
+      noteContext = `\n\nCurrent note context:
+Title: ${currentNote.title}
+Content: ${currentNote.content}
+${currentNote.summary ? `Summary: ${currentNote.summary}` : ''}
+
+Use this note content to answer questions, create quizzes, generate flashcards, or provide insights about the user's work.`;
+    }
+
 const systemPrompt = `You are Zeel, an AI assistant for NoteWise. You help users:
-- Create quizzes and flashcards from notes
+- Create quizzes and flashcards from their current note
 - Generate comprehensive notes on any topic when asked (e.g., "Generate notes on World War 2")
+- Answer questions about the current note's content (like NotebookLM)
+- Generate summaries and insights from the current note
 - Organize and manage notes effectively
 - Answer questions about app features
 - Provide productivity tips and note-taking strategies
-- Help users find information in their notes
 
 When users ask you to:
 - Create a quiz: Generate 5-10 questions based on their note content
 - Generate notes: Create detailed, well-structured notes on the requested topic with headings, bullet points, and key information
-- Organize files: Suggest folder structures and organization strategies
+- Answer questions: Use the current note content as reference to provide accurate answers
+- Generate flashcards: Create question-answer pairs from the note content
 
-Be friendly, concise, and helpful. Focus on practical advice.`;
+Be friendly, concise, and helpful. Focus on practical advice.${noteContext}`;
 
     const messages = [
       { role: "system", content: systemPrompt },
