@@ -1,0 +1,145 @@
+import { useState, useEffect } from "react";
+import { Plus, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
+
+interface Note {
+  id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface NotesListProps {
+  userId: string;
+  selectedNoteId: string | null;
+  onNoteSelect: (noteId: string) => void;
+  folderId: string | null;
+}
+
+export function NotesList({ userId, selectedNoteId, onNoteSelect, folderId }: NotesListProps) {
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchNotes();
+  }, [userId, folderId]);
+
+  const fetchNotes = async () => {
+    setLoading(true);
+    let query = supabase
+      .from('notes')
+      .select('*')
+      .eq('user_id', userId)
+      .order('updated_at', { ascending: false });
+
+    if (folderId) {
+      query = query.eq('folder_id', folderId);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      toast({
+        title: "Error fetching notes",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      setNotes(data || []);
+    }
+    setLoading(false);
+  };
+
+  const createNewNote = async () => {
+    const { data, error } = await supabase
+      .from('notes')
+      .insert([{
+        user_id: userId,
+        title: 'Untitled Note',
+        content: '',
+        folder_id: folderId,
+      }])
+      .select()
+      .single();
+
+    if (error) {
+      toast({
+        title: "Error creating note",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else if (data) {
+      fetchNotes();
+      onNoteSelect(data.id);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+    if (diffInDays === 0) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else if (diffInDays === 1) {
+      return 'Yesterday';
+    } else if (diffInDays < 7) {
+      return `${diffInDays} days ago`;
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
+
+  const getPreview = (content: string) => {
+    return content.substring(0, 100) || 'No content';
+  };
+
+  return (
+    <div className="w-80 border-r bg-card flex flex-col">
+      <div className="p-4 border-b">
+        <Button onClick={createNewNote} className="w-full">
+          <Plus className="mr-2 h-4 w-4" />
+          New Note
+        </Button>
+      </div>
+      
+      <div className="flex-1 overflow-y-auto">
+        {loading ? (
+          <div className="flex items-center justify-center h-32">
+            <p className="text-muted-foreground">Loading notes...</p>
+          </div>
+        ) : notes.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-32 text-center p-4">
+            <FileText className="h-8 w-8 text-muted-foreground mb-2" />
+            <p className="text-sm text-muted-foreground">No notes yet</p>
+          </div>
+        ) : (
+          notes.map((note) => (
+            <button
+              key={note.id}
+              onClick={() => onNoteSelect(note.id)}
+              className={cn(
+                "w-full text-left p-4 border-b hover:bg-accent transition-colors",
+                selectedNoteId === note.id && "bg-accent"
+              )}
+            >
+              <h3 className="font-medium truncate mb-1">{note.title}</h3>
+              <p className="text-sm text-muted-foreground truncate mb-2">
+                {getPreview(note.content)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {formatDate(note.updated_at)}
+              </p>
+            </button>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}

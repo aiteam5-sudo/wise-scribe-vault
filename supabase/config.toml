@@ -1,1 +1,7 @@
 project_id = "fontsvmexlkwqgbfrwtl"
+
+[functions.transcribe-audio]
+verify_jwt = true
+
+[functions.summarize-note]
+verify_jwt = true
