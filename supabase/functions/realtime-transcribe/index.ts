@@ -34,9 +34,11 @@ Deno.serve(async (req) => {
         const sessionConfig = {
           type: "session.update",
           session: {
-            modalities: ["text"],
-            instructions: "You are a transcription assistant. Transcribe the user's speech accurately. Only transcribe, do not respond.",
+            modalities: ["text", "audio"],
+            instructions: "You are a transcription assistant. Your only job is to transcribe what the user says. Do not respond, comment, or add anything. Just provide accurate transcription.",
+            voice: "alloy",
             input_audio_format: "pcm16",
+            output_audio_format: "pcm16",
             input_audio_transcription: {
               model: "whisper-1"
             },
@@ -44,8 +46,10 @@ Deno.serve(async (req) => {
               type: "server_vad",
               threshold: 0.5,
               prefix_padding_ms: 300,
-              silence_duration_ms: 300
-            }
+              silence_duration_ms: 500
+            },
+            temperature: 0.6,
+            max_response_output_tokens: 100
           }
         };
         openAISocket?.send(JSON.stringify(sessionConfig));

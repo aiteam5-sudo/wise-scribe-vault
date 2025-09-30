@@ -160,16 +160,6 @@ export const RichTextToolbar = ({ onFormat }: RichTextToolbarProps) => {
         <ListOrdered className="h-4 w-4" />
       </Button>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8"
-        onClick={() => onFormat("insertUnorderedList")}
-        title="Checklist"
-      >
-        <CheckSquare className="h-4 w-4" />
-      </Button>
-
       <div className="h-6 w-px bg-border mx-1" />
 
       {/* Alignment */}

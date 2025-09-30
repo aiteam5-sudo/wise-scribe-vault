@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Mic, MicOff, Sparkles, Loader2, Trash2, Replace, Wand2, MoreVertical, Share2, Copy, Tag, Image, AudioLines, ScanLine, StickyNote, Calendar, Minimize2, Maximize2, Home } from "lucide-react";
+import { Mic, MicOff, Sparkles, Loader2, Trash2, Replace, Wand2, MoreVertical, Share2, Copy, Tag, Image, AudioLines, ScanLine, StickyNote, Calendar, Minimize2, Maximize2, Home, FileDown, Mail, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { RealtimeTranscription } from "@/utils/RealtimeTranscription";
 import { RichTextEditor } from "./RichTextEditor";
 import { cn } from "@/lib/utils";
+import { exportNoteToPDF, shareViaEmail, shareViaWhatsApp } from "@/utils/pdfExport";
 import {
   Popover,
   PopoverContent,
@@ -40,6 +41,7 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
   const [titleSuggestions, setTitleSuggestions] = useState<string[]>([]);
   const [showTitlePopover, setShowTitlePopover] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const realtimeRef = useRef<RealtimeTranscription | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -336,11 +338,94 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
     }
   };
 
-  const handleShare = () => {
-    toast({
-      title: "Share feature",
-      description: "Share functionality coming soon!",
-    });
+  const handleExportPDF = async () => {
+    if (!content.trim()) {
+      toast({
+        title: "No content to export",
+        description: "Please add some content to your note first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const pdfBlob = await exportNoteToPDF(title || 'Untitled Note', content);
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${title || 'Untitled Note'}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "PDF exported",
+        description: "Your note has been exported as PDF.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Export failed",
+        description: error.message || "Failed to export PDF.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleShareEmail = async () => {
+    if (!content.trim()) {
+      toast({
+        title: "No content to share",
+        description: "Please add some content to your note first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      const pdfBlob = await exportNoteToPDF(title || 'Untitled Note', content);
+      shareViaEmail(title || 'Untitled Note', pdfBlob);
+      
+      toast({
+        title: "Opening email client",
+        description: "PDF downloaded. Attach it to your email.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Share failed",
+        description: error.message || "Failed to prepare email.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleShareWhatsApp = () => {
+    if (!content.trim()) {
+      toast({
+        title: "No content to share",
+        description: "Please add some content to your note first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      shareViaWhatsApp(title || 'Untitled Note', content);
+      toast({
+        title: "Opening WhatsApp",
+        description: "Share your note via WhatsApp.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Share failed",
+        description: error.message || "Failed to open WhatsApp.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAddTag = () => {
@@ -497,10 +582,19 @@ export function NoteEditor({ userId, noteId, onNoteCreated }: NoteEditorProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={handleShare}>
-                <Share2 className="mr-2 h-4 w-4" />
-                Share
+              <DropdownMenuItem onClick={handleExportPDF} disabled={isExporting}>
+                <FileDown className="mr-2 h-4 w-4" />
+                {isExporting ? 'Exporting...' : 'Export as PDF'}
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleShareEmail} disabled={isExporting}>
+                <Mail className="mr-2 h-4 w-4" />
+                Share via Email
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleShareWhatsApp}>
+                <MessageCircle className="mr-2 h-4 w-4" />
+                Share via WhatsApp
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleDuplicate}>
                 <Copy className="mr-2 h-4 w-4" />
                 Duplicate
